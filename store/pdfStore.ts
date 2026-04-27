@@ -1,4 +1,6 @@
 import { create } from 'zustand'
+import { persist, createJSONStorage } from 'zustand/middleware'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 export type PDF = {
 	id: string
@@ -12,16 +14,31 @@ export type PDF = {
 type PDFStore = {
 	pdfs: PDF[]
 	activePdf: PDF | null
+    _hasHydrated: boolean
+    setHasHydrated: (value: boolean) => void
 	addPdf: (pdf: PDF) => void
 	setActivePdf: (pdf: PDF) => void
 	removePdf: (id: string) => void
 }
 
-export const usePdfStore = create<PDFStore>((set) => ({
-	pdfs: [],
-	activePdf: null,
-	addPdf: (pdf) => set((state) => ({ pdfs: [...state.pdfs, pdf] })),
-	setActivePdf: (pdf) => set({ activePdf: pdf }),
-	removePdf: (id) =>
-		set((state) => ({ pdfs: state.pdfs.filter((p) => p.id !== id) })),
-}))
+export const usePdfStore = create<PDFStore>()(
+	persist(
+		(set) => ({
+			pdfs: [],
+			activePdf: null,
+			_hasHydrated: false,
+			setHasHydrated: (value) => set({ _hasHydrated: value }),
+			addPdf: (pdf) => set((state) => ({ pdfs: [...state.pdfs, pdf] })),
+			setActivePdf: (pdf) => set({ activePdf: pdf }),
+			removePdf: (id) =>
+				set((state) => ({ pdfs: state.pdfs.filter((p) => p.id !== id) })),
+		}),
+		{
+			name: 'pdf-storage',
+			storage: createJSONStorage(() => AsyncStorage),
+			onRehydrateStorage: () => (state) => {
+				state?.setHasHydrated(true)
+			}
+		},
+	),
+)
