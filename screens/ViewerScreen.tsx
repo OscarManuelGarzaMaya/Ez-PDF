@@ -1,10 +1,11 @@
-import { View, Text, StyleSheet } from "react-native";
+import { Text, StyleSheet } from "react-native";
+import ScreenWrapper from "../components/ScreenWrapper/ScreenWrapper";
 
 const ViewerScreen = ()=>{
     return (
-      <View style={styles.container}>
+      <ScreenWrapper>
         <Text>Viewer Screen</Text>
-      </View>
+      </ScreenWrapper>
     );
 }
 
