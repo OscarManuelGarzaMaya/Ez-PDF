@@ -1,4 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage'
 import {
 	View,
 	Text,
@@ -19,29 +18,19 @@ import { usePdfStore } from '../store/pdfStore'
 
 // Services
 import { pickPDF } from '../services/filePicker'
-import { useEffect } from 'react'
 
 type HomeNavProp = NativeStackNavigationProp<RootStackParamList, 'Home'>
 
 const HomeScreen = () => {
-	useEffect(() => {
-        console.log('test')
-		AsyncStorage.getItem('pdf-storage').then((value) => {
-			console.log('AsyncStorage pdf-storage:', value)
-		}).catch((error)=>{
-            console.log('AsyncStorage error:', error)
-        })
-	}, [])
-
 	const { pdfs, addPdf, _hasHydrated } = usePdfStore()
 
-	// if (!_hasHydrated) {
-	// 	return (
-	// 		<View style={styles.container}>
-	// 			<Text style={styles.emptyText}>Cargando...</Text>
-	// 		</View>
-	// 	)
-	// }
+	if (!_hasHydrated) {
+		return (
+			<View style={styles.container}>
+				<Text style={styles.emptyText}>Cargando...</Text>
+			</View>
+		)
+	}
 
 	const handleFABPress = async () => {
 		const pdf = await pickPDF()
