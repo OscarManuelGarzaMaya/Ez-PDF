@@ -11,7 +11,7 @@ type ThemeStore = {
 export const useThemeStore = create<ThemeStore>()(
 	persist(
 		(set) => ({
-			isDark: false,
+			isDark: true,
 			toggleTheme: () => set((state) => ({ isDark: !state.isDark })),
 			setTheme: (isDark) => set({ isDark }),
 		}),
