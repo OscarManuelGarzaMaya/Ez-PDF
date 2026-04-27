@@ -1,0 +1,48 @@
+import { View, Text, StyleSheet } from 'react-native'
+import { colors } from '../../constants/theme'
+
+type Props = {
+	isDark: boolean
+	pdfCount: number
+}
+
+const AppBar = ({ isDark, pdfCount }: Props) => {
+	const theme = isDark ? colors.dark : colors.light
+
+	return (
+		<View style={[styles.container, { backgroundColor: theme.surface }]}>
+			<Text style={[styles.title, { color: theme.text }]}>My PDFs</Text>
+			<View style={styles.badge}>
+				<Text style={styles.badgeText}>{pdfCount}</Text>
+			</View>
+		</View>
+	)
+}
+
+const styles = StyleSheet.create({
+	container: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		paddingHorizontal: 20,
+		paddingVertical: 16,
+		gap: 10,
+	},
+	title: {
+		fontSize: 24,
+		fontWeight: 'bold',
+		flex: 1,
+	},
+	badge: {
+		backgroundColor: '#00C9B1',
+		borderRadius: 12,
+		paddingHorizontal: 10,
+		paddingVertical: 4,
+	},
+	badgeText: {
+		color: '#fff',
+		fontSize: 14,
+		fontWeight: 'bold',
+	},
+})
+
+export default AppBar
