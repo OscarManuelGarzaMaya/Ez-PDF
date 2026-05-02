@@ -1,28 +1,37 @@
 import { useEffect, useRef, useState } from 'react'
-import { Text, StyleSheet, TouchableOpacity, Animated } from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity, Pressable, Animated } from 'react-native'
+import Svg, { G, Path } from 'react-native-svg'
+import Pdf from 'react-native-pdf-jsi'
+import { useRoute, RouteProp, useNavigation } from '@react-navigation/native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-// Libraries
-import Pdf from 'react-native-pdf-jsi'
-
-// Navigation
-import { useRoute, RouteProp, useNavigation } from '@react-navigation/native'
-
 import { RootStackParamList } from '../App'
-
-// Stores
 import { usePdfStore } from '../store/pdfStore'
 import { useThemeStore } from '../store/themeStore'
-
-// Constants
 import { colors } from '../constants/theme'
-
-// Components
 import ScreenWrapper from '../components/ScreenWrapper/ScreenWrapper'
 
 type ViewerRouteProp = RouteProp<RootStackParamList, 'Viewer'>
 
 const BAR_HEIGHT = 56
+const FAB_SIZE = 56
+const MINI_FAB_SIZE = 44
+
+const CHEVRON_PATH = 'm9.71 17.71 5.7-5.71-5.7-5.71-1.42 1.42 4.3 4.29-4.3 4.29z'
+
+const ChevronIcon = ({ up }: { up: boolean }) => (
+	<Svg width={24} height={24} viewBox="0 0 24 24">
+		<G transform={up ? 'rotate(270, 12, 12)' : 'rotate(90, 12, 12)'}>
+			<Path d={CHEVRON_PATH} fill="#fff" />
+		</G>
+	</Svg>
+)
+
+const MINI_FABS = [
+	{ label: 'AI Overview', color: colors.accent.teal, icon: '✦' },
+	{ label: 'Marcadores', color: colors.accent.violet, icon: '♡' },
+	{ label: 'Búsqueda', color: colors.accent.blue, icon: '⊙' },
+]
 
 const ViewerScreen = () => {
 	const route = useRoute<ViewerRouteProp>()
@@ -37,9 +46,12 @@ const ViewerScreen = () => {
 	const [currentPage, setCurrentPage] = useState(1)
 	const [totalPages, setTotalPages] = useState(0)
 	const [barsVisible, setBarsVisible] = useState(true)
+	const [fabOpen, setFabOpen] = useState(false)
 
 	const pdfRef = useRef<any>(null)
 	const barsAnim = useRef(new Animated.Value(1)).current
+	const backdropAnim = useRef(new Animated.Value(0)).current
+	const miniFabAnims = useRef(MINI_FABS.map(() => new Animated.Value(0))).current
 	const isNavigatingByButton = useRef(false)
 	const isInitialLoad = useRef(true)
 
@@ -49,21 +61,37 @@ const ViewerScreen = () => {
 
 	if (!pdf) return null
 
+	const openFab = () => {
+		setFabOpen(true)
+		Animated.parallel([
+			Animated.timing(backdropAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
+			Animated.stagger(60, [miniFabAnims[2], miniFabAnims[1], miniFabAnims[0]].map((anim) =>
+				Animated.spring(anim, { toValue: 1, useNativeDriver: true, tension: 120, friction: 8 })
+			)),
+		]).start()
+	}
+
+	const closeFab = () => {
+		Animated.parallel([
+			Animated.timing(backdropAnim, { toValue: 0, duration: 200, useNativeDriver: true }),
+			Animated.stagger(40, miniFabAnims.map((anim) =>
+				Animated.timing(anim, { toValue: 0, duration: 150, useNativeDriver: true })
+			)),
+		]).start(() => setFabOpen(false))
+	}
+
+	const toggleFab = () => (fabOpen ? closeFab() : openFab())
+
 	const showBars = () => {
 		setBarsVisible(true)
-		Animated.timing(barsAnim, {
-			toValue: 1,
-			duration: 200,
-			useNativeDriver: true,
-		}).start()
+		Animated.timing(barsAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start()
 	}
 
 	const hideBars = () => {
-		Animated.timing(barsAnim, {
-			toValue: 0,
-			duration: 200,
-			useNativeDriver: true,
-		}).start(() => setBarsVisible(false))
+		if (fabOpen) closeFab()
+		Animated.timing(barsAnim, { toValue: 0, duration: 200, useNativeDriver: true }).start(() =>
+			setBarsVisible(false)
+		)
 	}
 
 	const toggleBars = () => {
@@ -94,9 +122,11 @@ const ViewerScreen = () => {
 	}
 
 	const bottomBarHeight = BAR_HEIGHT + (insets.bottom || 12)
+	const fabBottom = (insets.bottom || 0) + BAR_HEIGHT + 16
 
 	return (
 		<ScreenWrapper>
+			{/* Top Bar */}
 			<Animated.View
 				pointerEvents={barsVisible ? 'auto' : 'none'}
 				style={[
@@ -108,17 +138,11 @@ const ViewerScreen = () => {
 					},
 				]}
 			>
-				<TouchableOpacity
-					onPress={() => navigation.goBack()}
-					style={styles.barButton}
-				>
+				<TouchableOpacity onPress={() => navigation.goBack()} style={styles.barButton}>
 					<Text style={[styles.icon, { color: theme.text }]}>←</Text>
 				</TouchableOpacity>
 
-				<Text
-					style={[styles.fileName, { color: theme.text }]}
-					numberOfLines={1}
-				>
+				<Text style={[styles.fileName, { color: theme.text }]} numberOfLines={1}>
 					{pdf.name}
 				</Text>
 
@@ -160,7 +184,9 @@ const ViewerScreen = () => {
 					disabled={currentPage <= 1}
 					style={styles.navButton}
 				>
-					<Text style={[styles.navIcon, { color: currentPage <= 1 ? theme.textMuted : theme.text }]}>‹ Anterior</Text>
+					<Text style={[styles.navIcon, { color: currentPage <= 1 ? theme.textMuted : theme.text }]}>
+						‹ Anterior
+					</Text>
 				</TouchableOpacity>
 
 				<Text style={[styles.pageIndicator, { color: theme.textMuted }]}>
@@ -172,9 +198,50 @@ const ViewerScreen = () => {
 					disabled={currentPage >= totalPages}
 					style={styles.navButton}
 				>
-					<Text style={[styles.navIcon, { color: currentPage >= totalPages ? theme.textMuted : theme.text }]}>Siguiente ›</Text>
+					<Text style={[styles.navIcon, { color: currentPage >= totalPages ? theme.textMuted : theme.text }]}>
+						Siguiente ›
+					</Text>
 				</TouchableOpacity>
 			</Animated.View>
+
+			<Animated.View
+				pointerEvents={fabOpen ? 'auto' : 'none'}
+				style={[styles.backdrop, { opacity: backdropAnim }]}
+			>
+				<Pressable style={StyleSheet.absoluteFill} onPress={closeFab} />
+			</Animated.View>
+
+			<View style={[styles.fabContainer, { bottom: fabBottom }]}>
+				<View pointerEvents={fabOpen ? 'auto' : 'none'}>
+					{MINI_FABS.map(({ label, color, icon }, i) => {
+						const anim = miniFabAnims[i]
+						return (
+							<Animated.View
+								key={label}
+								style={{
+									opacity: anim,
+									transform: [
+										{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) },
+									],
+								}}
+							>
+								<TouchableOpacity style={styles.miniFabRow} onPress={() => {}}>
+									<View style={[styles.miniFabLabel, { backgroundColor: theme.surface }]}>
+										<Text style={[styles.miniFabLabelText, { color: theme.text }]}>{label}</Text>
+									</View>
+									<View style={[styles.miniFab, { backgroundColor: color }]}>
+										<Text style={styles.miniFabIcon}>{icon}</Text>
+									</View>
+								</TouchableOpacity>
+							</Animated.View>
+						)
+					})}
+				</View>
+
+				<TouchableOpacity style={styles.fab} onPress={toggleFab} activeOpacity={1}>
+					<ChevronIcon up={!fabOpen} />
+				</TouchableOpacity>
+			</View>
 		</ScreenWrapper>
 	)
 }
@@ -225,7 +292,7 @@ const styles = StyleSheet.create({
 	icon: {
 		fontSize: 22,
 	},
-navButton: {
+	navButton: {
 		paddingVertical: 8,
 		paddingHorizontal: 4,
 	},
@@ -235,6 +302,69 @@ navButton: {
 	},
 	pageIndicator: {
 		fontSize: 13,
+	},
+	backdrop: {
+		...StyleSheet.absoluteFillObject,
+		backgroundColor: 'rgba(0,0,0,0.35)',
+		zIndex: 10,
+	},
+	fabContainer: {
+		position: 'absolute',
+		right: 20,
+		alignItems: 'flex-end',
+		zIndex: 20,
+	},
+	fab: {
+		width: FAB_SIZE,
+		height: FAB_SIZE,
+		borderRadius: FAB_SIZE / 2,
+		backgroundColor: colors.accent.teal,
+		alignItems: 'center',
+		justifyContent: 'center',
+		marginTop: 12,
+		elevation: 6,
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: 3 },
+		shadowOpacity: 0.3,
+		shadowRadius: 6,
+	},
+miniFabRow: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'flex-end',
+		height: MINI_FAB_SIZE,
+		marginBottom: 12,
+	},
+	miniFabLabel: {
+		paddingHorizontal: 12,
+		paddingVertical: 6,
+		borderRadius: 8,
+		marginRight: 12,
+		elevation: 3,
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.2,
+		shadowRadius: 3,
+	},
+	miniFabLabelText: {
+		fontSize: 13,
+		fontWeight: '600',
+	},
+	miniFab: {
+		width: MINI_FAB_SIZE,
+		height: MINI_FAB_SIZE,
+		borderRadius: MINI_FAB_SIZE / 2,
+		alignItems: 'center',
+		justifyContent: 'center',
+		elevation: 4,
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.25,
+		shadowRadius: 4,
+	},
+	miniFabIcon: {
+		fontSize: 18,
+		color: '#fff',
 	},
 })
 
