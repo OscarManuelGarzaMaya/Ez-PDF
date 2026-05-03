@@ -1,7 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
-import { View, Text, StyleSheet, TouchableOpacity, Pressable, Animated } from 'react-native'
+import {
+	View,
+	Text,
+	StyleSheet,
+	TouchableOpacity,
+	Pressable,
+	Animated,
+	PanResponder,
+	TextInput,
+	Keyboard,
+} from 'react-native'
 import Svg, { G, Path } from 'react-native-svg'
-import Pdf from 'react-native-pdf-jsi'
+import Pdf, { searchTextDirect } from 'react-native-pdf-jsi'
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
@@ -12,10 +22,12 @@ import { colors } from '../constants/theme'
 import ScreenWrapper from '../components/ScreenWrapper/ScreenWrapper'
 
 type ViewerRouteProp = RouteProp<RootStackParamList, 'Viewer'>
+type SearchResult = { page: number; text: string; rect: string }
 
 const BAR_HEIGHT = 56
 const FAB_SIZE = 56
 const MINI_FAB_SIZE = 44
+const PDF_ID = 'ez-pdf-viewer'
 
 const CHEVRON_PATH = 'm9.71 17.71 5.7-5.71-5.7-5.71-1.42 1.42 4.3 4.29-4.3 4.29z'
 
@@ -47,36 +59,128 @@ const ViewerScreen = () => {
 	const [totalPages, setTotalPages] = useState(0)
 	const [barsVisible, setBarsVisible] = useState(true)
 	const [fabOpen, setFabOpen] = useState(false)
+	const [searchOpen, setSearchOpen] = useState(false)
+	const [searchQuery, setSearchQuery] = useState('')
+	const [searchResults, setSearchResults] = useState<SearchResult[]>([])
+	const [currentMatch, setCurrentMatch] = useState(0)
+	const [keyboardHeight, setKeyboardHeight] = useState(0)
 
 	const pdfRef = useRef<any>(null)
 	const barsAnim = useRef(new Animated.Value(1)).current
 	const backdropAnim = useRef(new Animated.Value(0)).current
+	const searchPanelAnim = useRef(new Animated.Value(0)).current
 	const miniFabAnims = useRef(MINI_FABS.map(() => new Animated.Value(0))).current
 	const isNavigatingByButton = useRef(false)
 	const isInitialLoad = useRef(true)
+	const searchDebounce = useRef<ReturnType<typeof setTimeout> | null>(null)
+	const closeSearchRef = useRef<() => void>(() => {})
+
+	const panResponder = useRef(
+		PanResponder.create({
+			onMoveShouldSetPanResponder: (_, { dy, dx }) => dy > 10 && dy > Math.abs(dx),
+			onPanResponderRelease: (_, { dy }) => {
+				if (dy > 50) closeSearchRef.current()
+			},
+		})
+	).current
 
 	useEffect(() => {
 		if (!pdf) navigation.goBack()
 	}, [pdf])
 
+	useEffect(() => {
+		const show = Keyboard.addListener('keyboardDidShow', (e) => {
+			setKeyboardHeight(e.endCoordinates.height)
+		})
+		const hide = Keyboard.addListener('keyboardDidHide', () => {
+			setKeyboardHeight(0)
+		})
+		return () => {
+			show.remove()
+			hide.remove()
+		}
+	}, [])
+
 	if (!pdf) return null
+
+	const openSearch = () => {
+		if (fabOpen) closeFab()
+		setSearchOpen(true)
+		Animated.spring(searchPanelAnim, {
+			toValue: 1,
+			useNativeDriver: true,
+			tension: 100,
+			friction: 10,
+		}).start()
+	}
+
+	const closeSearch = () => {
+		Animated.timing(searchPanelAnim, { toValue: 0, duration: 250, useNativeDriver: true }).start(
+			() => {
+				setSearchOpen(false)
+				setSearchQuery('')
+				setSearchResults([])
+				setCurrentMatch(0)
+			}
+		)
+	}
+
+	closeSearchRef.current = closeSearch
+
+	const performSearch = (query: string) => {
+		if (searchDebounce.current) clearTimeout(searchDebounce.current)
+		if (!query.trim() || totalPages === 0) {
+			setSearchResults([])
+			setCurrentMatch(0)
+			return
+		}
+		searchDebounce.current = setTimeout(async () => {
+			try {
+				const results = await searchTextDirect(PDF_ID, query, 1, totalPages)
+				setSearchResults(results as SearchResult[])
+				setCurrentMatch(0)
+				if (results.length > 0) pdfRef.current?.setPage(results[0].page)
+			} catch {
+				setSearchResults([])
+			}
+		}, 300)
+	}
+
+	const goToMatch = (index: number) => {
+		if (searchResults.length === 0) return
+		const next = (index + searchResults.length) % searchResults.length
+		setCurrentMatch(next)
+		pdfRef.current?.setPage(searchResults[next].page)
+	}
+
+	const miniFabHandlers = [
+		() => {}, // AI Overview — Milestone 2
+		() => {}, // Marcadores — Issue #9
+		openSearch,
+	]
 
 	const openFab = () => {
 		setFabOpen(true)
 		Animated.parallel([
 			Animated.timing(backdropAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
-			Animated.stagger(60, [miniFabAnims[2], miniFabAnims[1], miniFabAnims[0]].map((anim) =>
-				Animated.spring(anim, { toValue: 1, useNativeDriver: true, tension: 120, friction: 8 })
-			)),
+			Animated.stagger(
+				60,
+				[miniFabAnims[2], miniFabAnims[1], miniFabAnims[0]].map((anim) =>
+					Animated.spring(anim, { toValue: 1, useNativeDriver: true, tension: 120, friction: 8 })
+				)
+			),
 		]).start()
 	}
 
 	const closeFab = () => {
 		Animated.parallel([
 			Animated.timing(backdropAnim, { toValue: 0, duration: 200, useNativeDriver: true }),
-			Animated.stagger(40, miniFabAnims.map((anim) =>
-				Animated.timing(anim, { toValue: 0, duration: 150, useNativeDriver: true })
-			)),
+			Animated.stagger(
+				40,
+				miniFabAnims.map((anim) =>
+					Animated.timing(anim, { toValue: 0, duration: 150, useNativeDriver: true })
+				)
+			),
 		]).start(() => setFabOpen(false))
 	}
 
@@ -151,14 +255,17 @@ const ViewerScreen = () => {
 				</Text>
 			</Animated.View>
 
+			{/* PDF */}
 			<Pdf
 				ref={pdfRef}
+				pdfId={PDF_ID}
 				source={{ uri: pdf.uri }}
 				style={styles.pdf}
 				fitPolicy={0}
 				spacing={8}
 				enableAntialiasing
 				enableDoubleTapZoom
+				highlightRects={searchResults.map((r) => ({ page: r.page, rect: r.rect }))}
 				onLoadComplete={(numberOfPages) => {
 					setTotalPages(numberOfPages)
 					updateLastOpened(pdf.id)
@@ -167,6 +274,7 @@ const ViewerScreen = () => {
 				onPageSingleTap={toggleBars}
 			/>
 
+			{/* Bottom Bar */}
 			<Animated.View
 				pointerEvents={barsVisible ? 'auto' : 'none'}
 				style={[
@@ -198,12 +306,15 @@ const ViewerScreen = () => {
 					disabled={currentPage >= totalPages}
 					style={styles.navButton}
 				>
-					<Text style={[styles.navIcon, { color: currentPage >= totalPages ? theme.textMuted : theme.text }]}>
+					<Text
+						style={[styles.navIcon, { color: currentPage >= totalPages ? theme.textMuted : theme.text }]}
+					>
 						Siguiente ›
 					</Text>
 				</TouchableOpacity>
 			</Animated.View>
 
+			{/* FAB Backdrop */}
 			<Animated.View
 				pointerEvents={fabOpen ? 'auto' : 'none'}
 				style={[styles.backdrop, { opacity: backdropAnim }]}
@@ -211,6 +322,7 @@ const ViewerScreen = () => {
 				<Pressable style={StyleSheet.absoluteFill} onPress={closeFab} />
 			</Animated.View>
 
+			{/* FAB */}
 			<View style={[styles.fabContainer, { bottom: fabBottom }]}>
 				<View pointerEvents={fabOpen ? 'auto' : 'none'}>
 					{MINI_FABS.map(({ label, color, icon }, i) => {
@@ -225,7 +337,7 @@ const ViewerScreen = () => {
 									],
 								}}
 							>
-								<TouchableOpacity style={styles.miniFabRow} onPress={() => {}}>
+								<TouchableOpacity style={styles.miniFabRow} onPress={miniFabHandlers[i]}>
 									<View style={[styles.miniFabLabel, { backgroundColor: theme.surface }]}>
 										<Text style={[styles.miniFabLabelText, { color: theme.text }]}>{label}</Text>
 									</View>
@@ -242,6 +354,80 @@ const ViewerScreen = () => {
 					<ChevronIcon up={!fabOpen} />
 				</TouchableOpacity>
 			</View>
+
+			{/* Search Panel */}
+			{searchOpen && (
+				<Animated.View
+					style={[
+						styles.searchPanel,
+						{
+							backgroundColor: theme.surface,
+							paddingBottom: insets.bottom || 12,
+							bottom: keyboardHeight,
+							transform: [
+								{
+									translateY: searchPanelAnim.interpolate({
+										inputRange: [0, 1],
+										outputRange: [200, 0],
+									}),
+								},
+							],
+						},
+					]}
+					{...panResponder.panHandlers}
+				>
+					<View style={styles.searchHandle} />
+
+					<View style={styles.searchRow}>
+						<TouchableOpacity onPress={closeSearch} style={styles.searchCloseButton}>
+							<Text style={[styles.searchCloseIcon, { color: theme.textMuted }]}>✕</Text>
+						</TouchableOpacity>
+
+						<TextInput
+							style={[
+								styles.searchInput,
+								{
+									color: theme.text,
+									borderColor: theme.border,
+									backgroundColor: theme.background,
+								},
+							]}
+							placeholder="Buscar en el documento..."
+							placeholderTextColor={theme.textMuted}
+							value={searchQuery}
+							onChangeText={(text) => {
+								setSearchQuery(text)
+								performSearch(text)
+							}}
+							autoFocus
+							returnKeyType="search"
+						/>
+
+						{searchResults.length > 0 && (
+							<Text style={[styles.searchCounter, { color: theme.textMuted }]}>
+								{currentMatch + 1}/{searchResults.length}
+							</Text>
+						)}
+					</View>
+
+					{searchResults.length > 0 && (
+						<View style={styles.searchNavRow}>
+							<TouchableOpacity
+								onPress={() => goToMatch(currentMatch - 1)}
+								style={styles.searchNavButton}
+							>
+								<Text style={[styles.searchNavText, { color: theme.text }]}>← Anterior</Text>
+							</TouchableOpacity>
+							<TouchableOpacity
+								onPress={() => goToMatch(currentMatch + 1)}
+								style={styles.searchNavButton}
+							>
+								<Text style={[styles.searchNavText, { color: theme.text }]}>Siguiente →</Text>
+							</TouchableOpacity>
+						</View>
+					)}
+				</Animated.View>
+			)}
 		</ScreenWrapper>
 	)
 }
@@ -328,7 +514,7 @@ const styles = StyleSheet.create({
 		shadowOpacity: 0.3,
 		shadowRadius: 6,
 	},
-miniFabRow: {
+	miniFabRow: {
 		flexDirection: 'row',
 		alignItems: 'center',
 		justifyContent: 'flex-end',
@@ -365,6 +551,72 @@ miniFabRow: {
 	miniFabIcon: {
 		fontSize: 18,
 		color: '#fff',
+	},
+	searchPanel: {
+		position: 'absolute',
+		left: 0,
+		right: 0,
+		bottom: 0,
+		borderTopLeftRadius: 16,
+		borderTopRightRadius: 16,
+		paddingTop: 8,
+		paddingHorizontal: 16,
+		elevation: 12,
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: -3 },
+		shadowOpacity: 0.2,
+		shadowRadius: 8,
+		zIndex: 30,
+	},
+	searchHandle: {
+		width: 40,
+		height: 4,
+		borderRadius: 2,
+		backgroundColor: 'rgba(150,150,150,0.4)',
+		alignSelf: 'center',
+		marginBottom: 12,
+	},
+	searchRow: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		gap: 8,
+		marginBottom: 8,
+	},
+	searchCloseButton: {
+		width: 32,
+		height: 32,
+		alignItems: 'center',
+		justifyContent: 'center',
+	},
+	searchCloseIcon: {
+		fontSize: 16,
+	},
+	searchInput: {
+		flex: 1,
+		height: 40,
+		borderWidth: 1,
+		borderRadius: 10,
+		paddingHorizontal: 12,
+		fontSize: 15,
+	},
+	searchCounter: {
+		fontSize: 13,
+		minWidth: 44,
+		textAlign: 'right',
+	},
+	searchNavRow: {
+		flexDirection: 'row',
+		justifyContent: 'center',
+		gap: 24,
+		paddingBottom: 4,
+	},
+	searchNavButton: {
+		paddingVertical: 6,
+		paddingHorizontal: 12,
+	},
+	searchNavText: {
+		fontSize: 14,
+		fontWeight: '600',
 	},
 })
 
