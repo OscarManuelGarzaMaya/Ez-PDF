@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
 	View,
 	Text,
@@ -6,6 +6,7 @@ import {
 	TouchableOpacity,
 	Pressable,
 	Animated,
+	FlatList,
 	PanResponder,
 	TextInput,
 	Keyboard,
@@ -20,6 +21,14 @@ import { usePdfStore } from '../store/pdfStore'
 import { useThemeStore } from '../store/themeStore'
 import { colors } from '../constants/theme'
 import ScreenWrapper from '../components/ScreenWrapper/ScreenWrapper'
+import { useBookmarkStore } from '../store/bookmarkStore'
+import type { Bookmark } from '../store/bookmarkStore'
+
+const formatDate = (ts: number) => {
+	const d = new Date(ts)
+	const pad = (n: number) => String(n).padStart(2, '0')
+	return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
 
 type ViewerRouteProp = RouteProp<RootStackParamList, 'Viewer'>
 type SearchResult = { page: number; text: string; rect: string }
@@ -84,6 +93,32 @@ const ViewerScreen = () => {
 		})
 	).current
 
+	const [bookmarksOpen, setBookmarksOpen] = useState(false)
+	const bookmarksPanelAnim = useRef(new Animated.Value(0)).current
+	const closeBookmarksRef = useRef<() => void>(() => {})
+
+	const bookmarksPanResponder = useRef(
+		PanResponder.create({
+			onMoveShouldSetPanResponder: (_, { dy, dx }) => dy > 10 && dy > Math.abs(dx),
+			onPanResponderRelease: (_, { dy }) => {
+				if (dy > 50) closeBookmarksRef.current()
+			},
+		})
+	).current
+
+	const allBookmarks = useBookmarkStore((state) => state.bookmarks)
+	const { addBookmark, removeBookmark } = useBookmarkStore()
+
+	const pdfBookmarks = useMemo(
+		() => (allBookmarks[route.params.pdfId] ?? []).slice().sort((a, b) => a.page - b.page),
+		[allBookmarks, route.params.pdfId]
+	)
+
+	const currentPageIsBookmarked = useMemo(
+		() => (allBookmarks[route.params.pdfId] ?? []).some((b) => b.page === currentPage),
+		[allBookmarks, route.params.pdfId, currentPage]
+	)
+
 	useEffect(() => {
 		if (!pdf) navigation.goBack()
 	}, [pdf])
@@ -103,8 +138,37 @@ const ViewerScreen = () => {
 
 	if (!pdf) return null
 
+	const openBookmarks = () => {
+		if (fabOpen) closeFab()
+		setBookmarksOpen(true)
+		Animated.spring(bookmarksPanelAnim, {
+			toValue: 1,
+			useNativeDriver: true,
+			tension: 100,
+			friction: 10,
+		}).start()
+	}
+
+	const closeBookmarks = () => {
+		Animated.timing(bookmarksPanelAnim, { toValue: 0, duration: 250, useNativeDriver: true }).start(
+			() => setBookmarksOpen(false)
+		)
+	}
+
+	closeBookmarksRef.current = closeBookmarks
+
+	const toggleCurrentPageBookmark = () => {
+		if (!pdf) return
+		if (currentPageIsBookmarked) {
+			removeBookmark(pdf.id, currentPage)
+		} else {
+			addBookmark(pdf.id, currentPage)
+		}
+	}
+
 	const openSearch = () => {
 		if (fabOpen) closeFab()
+		if (bookmarksOpen) closeBookmarks()
 		setSearchOpen(true)
 		Animated.spring(searchPanelAnim, {
 			toValue: 1,
@@ -155,7 +219,7 @@ const ViewerScreen = () => {
 
 	const miniFabHandlers = [
 		() => {}, // AI Overview — Milestone 2
-		() => {}, // Marcadores — Issue #9
+		openBookmarks,
 		openSearch,
 	]
 
@@ -249,6 +313,12 @@ const ViewerScreen = () => {
 				<Text style={[styles.fileName, { color: theme.text }]} numberOfLines={1}>
 					{pdf.name}
 				</Text>
+
+				<TouchableOpacity onPress={toggleCurrentPageBookmark} style={styles.barButton}>
+					<Text style={[styles.bookmarkIcon, { color: currentPageIsBookmarked ? colors.accent.violet : theme.textMuted }]}>
+						{currentPageIsBookmarked ? '★' : '☆'}
+					</Text>
+				</TouchableOpacity>
 
 				<Text style={[styles.pageCount, { color: theme.textMuted }]}>
 					{currentPage}/{totalPages}
@@ -356,6 +426,77 @@ const ViewerScreen = () => {
 			</View>
 
 			{/* Search Panel */}
+			{bookmarksOpen && (
+				<Animated.View
+					style={[
+						styles.bookmarksPanel,
+						{
+							backgroundColor: theme.surface,
+							paddingBottom: insets.bottom || 12,
+							transform: [
+								{
+									translateY: bookmarksPanelAnim.interpolate({
+										inputRange: [0, 1],
+										outputRange: [400, 0],
+									}),
+								},
+							],
+						},
+					]}
+					{...bookmarksPanResponder.panHandlers}
+				>
+					<View style={styles.searchHandle} />
+
+					<View style={styles.bookmarksPanelHeader}>
+						<Text style={[styles.bookmarksPanelTitle, { color: theme.text }]}>Marcadores</Text>
+						<TouchableOpacity onPress={closeBookmarks} style={styles.searchCloseButton}>
+							<Text style={[styles.searchCloseIcon, { color: theme.textMuted }]}>✕</Text>
+						</TouchableOpacity>
+					</View>
+
+					{pdfBookmarks.length === 0 ? (
+						<View style={styles.bookmarksEmpty}>
+							<Text style={[styles.bookmarksEmptyText, { color: theme.textMuted }]}>
+								No hay marcadores. Usa ★ en la barra superior para guardar páginas.
+							</Text>
+						</View>
+					) : (
+						<FlatList
+							data={pdfBookmarks}
+							keyExtractor={(item) => `${item.page}`}
+							renderItem={({ item }: { item: Bookmark }) => (
+								<TouchableOpacity
+									style={[styles.bookmarkItem, { borderBottomColor: theme.border }]}
+									onPress={() => {
+										isNavigatingByButton.current = true
+										showBars()
+										bookmarksPanelAnim.setValue(0)
+										setBookmarksOpen(false)
+										pdfRef.current?.setPage(item.page)
+									}}
+								>
+									<View style={styles.bookmarkItemLeft}>
+										<Text style={[styles.bookmarkPage, { color: colors.accent.violet }]}>
+											Pág. {item.page}
+										</Text>
+										<Text style={[styles.bookmarkDate, { color: theme.textMuted }]}>
+											{formatDate(item.createdAt)}
+										</Text>
+									</View>
+									<TouchableOpacity
+										onPress={() => removeBookmark(pdf!.id, item.page)}
+										style={styles.bookmarkDeleteButton}
+										hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+									>
+										<Text style={[styles.bookmarkDeleteIcon, { color: colors.accent.red }]}>✕</Text>
+									</TouchableOpacity>
+								</TouchableOpacity>
+							)}
+						/>
+					)}
+				</Animated.View>
+			)}
+
 			{searchOpen && (
 				<Animated.View
 					style={[
@@ -617,6 +758,72 @@ const styles = StyleSheet.create({
 	searchNavText: {
 		fontSize: 14,
 		fontWeight: '600',
+	},
+	bookmarksPanel: {
+		position: 'absolute',
+		left: 0,
+		right: 0,
+		bottom: 0,
+		maxHeight: 400,
+		borderTopLeftRadius: 16,
+		borderTopRightRadius: 16,
+		paddingTop: 8,
+		paddingHorizontal: 16,
+		elevation: 12,
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: -3 },
+		shadowOpacity: 0.2,
+		shadowRadius: 8,
+		zIndex: 30,
+	},
+	bookmarksPanelHeader: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'space-between',
+		marginBottom: 8,
+	},
+	bookmarksPanelTitle: {
+		fontSize: 16,
+		fontWeight: '700',
+	},
+	bookmarksEmpty: {
+		paddingVertical: 32,
+		alignItems: 'center',
+	},
+	bookmarksEmptyText: {
+		fontSize: 14,
+		textAlign: 'center',
+		lineHeight: 20,
+	},
+	bookmarkItem: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'space-between',
+		paddingVertical: 14,
+		borderBottomWidth: StyleSheet.hairlineWidth,
+	},
+	bookmarkItemLeft: {
+		flex: 1,
+	},
+	bookmarkPage: {
+		fontSize: 15,
+		fontWeight: '600',
+	},
+	bookmarkDate: {
+		fontSize: 12,
+		marginTop: 2,
+	},
+	bookmarkDeleteButton: {
+		width: 32,
+		height: 32,
+		alignItems: 'center',
+		justifyContent: 'center',
+	},
+	bookmarkDeleteIcon: {
+		fontSize: 14,
+	},
+	bookmarkIcon: {
+		fontSize: 20,
 	},
 })
 
