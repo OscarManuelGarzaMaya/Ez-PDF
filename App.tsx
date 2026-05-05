@@ -1,10 +1,10 @@
+import { useEffect } from 'react'
 import { StatusBar } from 'expo-status-bar'
 
 // Navigation
 import { NavigationContainer } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
-
 
 // Theme & colors
 import { useThemeStore } from './store/themeStore'
@@ -13,6 +13,10 @@ import { colors } from './constants/theme'
 // Screens
 import HomeScreen from './screens/HomeScreen'
 import ViewerScreen from './screens/ViewerScreen'
+
+// Session
+import { useDeviceStore } from './store/deviceStore'
+import { initSession } from './services/session'
 
 export type RootStackParamList = {
 	Home: undefined
@@ -24,6 +28,11 @@ const Stack = createNativeStackNavigator<RootStackParamList>()
 export default function App() {
 	const { isDark } = useThemeStore()
 	const theme = isDark ? colors.dark : colors.light
+	const { deviceId, _hasHydrated } = useDeviceStore()
+
+	useEffect(() => {
+		if (_hasHydrated) initSession(deviceId)
+	}, [_hasHydrated])
 
 	return (
 		<SafeAreaProvider>
