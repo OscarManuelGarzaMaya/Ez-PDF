@@ -39,6 +39,7 @@ import { colors } from '../constants/theme'
 
 // Components
 import ScreenWrapper from '../components/ScreenWrapper/ScreenWrapper'
+import ThemeMenu from '../components/ThemeMenu/ThemeMenu'
 
 // Services
 import { generateSummary } from '../services/summary'
@@ -101,7 +102,6 @@ const ViewerScreen = () => {
 	// — UI Visibility —
 	const [barsVisible, setBarsVisible] = useState(true)
 	const [fabOpen, setFabOpen] = useState(false)
-
 	// — Search —
 	const [searchOpen, setSearchOpen] = useState(false)
 	const [searchQuery, setSearchQuery] = useState('')
@@ -521,6 +521,8 @@ const ViewerScreen = () => {
 				<Text style={[styles.pageCount, { color: theme.textMuted }]}>
 					{currentPage}/{totalPages}
 				</Text>
+
+				<ThemeMenu isDark={isDark} barHeight={BAR_HEIGHT} />
 			</Animated.View>
 
 			{/* PDF */}
