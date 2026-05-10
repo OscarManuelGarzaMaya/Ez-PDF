@@ -19,11 +19,11 @@ export const generateSummary = async (
 	})
 
 	if (error) {
-		const body = (error as any).context
-		if (body?.reset_date) {
-			return { ok: false, limitReached: true, reset_date: body.reset_date }
-		}
 		return { ok: false, limitReached: false, error: error.message }
+	}
+
+	if (data.limit_reached) {
+		return { ok: false, limitReached: true, reset_date: data.reset_date }
 	}
 
 	return {
