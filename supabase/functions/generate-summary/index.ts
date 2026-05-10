@@ -40,7 +40,7 @@ Deno.serve(async (req: Request) => {
 	}
 
 	if (credits.used_count >= MAX_CREDITS) {
-		return json({ error: 'Monthly limit reached', reset_date: credits.reset_date }, 403)
+		return json({ limit_reached: true, reset_date: credits.reset_date })
 	}
 
 	const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
