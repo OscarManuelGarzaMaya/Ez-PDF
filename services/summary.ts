@@ -1,3 +1,4 @@
+import * as FileSystem from 'expo-file-system/legacy'
 import { supabase } from './supabase'
 
 export type SummaryResult =
@@ -7,10 +8,14 @@ export type SummaryResult =
 
 export const generateSummary = async (
 	deviceId: string,
-	pdfText: string
+	pdfUri: string
 ): Promise<SummaryResult> => {
+	const pdf_base64 = await FileSystem.readAsStringAsync(pdfUri, {
+		encoding: FileSystem.EncodingType.Base64,
+	})
+
 	const { data, error } = await supabase.functions.invoke('generate-summary', {
-		body: { device_id: deviceId, pdf_text: pdfText },
+		body: { device_id: deviceId, pdf_base64 },
 	})
 
 	if (error) {
