@@ -18,5 +18,7 @@ export const colors = {
 		violet: '#A78BFA',
 		blue: '#60A5FA',
 		red: '#F87171',
+		orange: '#FB923C',
+		green: '#34D399',
 	},
 }

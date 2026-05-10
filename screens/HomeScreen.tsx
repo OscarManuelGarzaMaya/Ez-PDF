@@ -1,7 +1,5 @@
 import { useState, useMemo } from 'react'
 import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
-
 // Navigation
 import { useNavigation } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
@@ -28,8 +26,6 @@ import EmptyState from '../components/EmptyState/EmptyState'
 type HomeNavProp = NativeStackNavigationProp<RootStackParamList, 'Home'>
 
 const HomeScreen = () => {
-    const insets = useSafeAreaInsets()
-    
 	const navigation = useNavigation<HomeNavProp>()
 	const { pdfs, addPdf, _hasHydrated } = usePdfStore()
 	const { isDark } = useThemeStore()
@@ -112,6 +108,7 @@ const HomeScreen = () => {
 			>
 				<Text style={styles.fabIcon}>+</Text>
 			</TouchableOpacity>
+
 		</ScreenWrapper>
 	)
 }
@@ -145,7 +142,7 @@ const styles = StyleSheet.create({
 		width: 56,
 		height: 56,
 		borderRadius: 28,
-		backgroundColor: '#00C9B1',
+		backgroundColor: colors.accent.teal,
 		alignItems: 'center',
 		justifyContent: 'center',
 		elevation: 6,
