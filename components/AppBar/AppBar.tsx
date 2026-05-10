@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet } from 'react-native'
 import { colors } from '../../constants/theme'
+import ThemeMenu from '../ThemeMenu/ThemeMenu'
 
 type Props = {
 	isDark: boolean
@@ -15,6 +16,7 @@ const AppBar = ({ isDark, pdfCount }: Props) => {
 			<View style={styles.badge}>
 				<Text style={styles.badgeText}>{pdfCount}</Text>
 			</View>
+			<ThemeMenu isDark={isDark} />
 		</View>
 	)
 }
@@ -33,7 +35,7 @@ const styles = StyleSheet.create({
 		flex: 1,
 	},
 	badge: {
-		backgroundColor: '#00C9B1',
+		backgroundColor: colors.accent.teal,
 		borderRadius: 12,
 		paddingHorizontal: 10,
 		paddingVertical: 4,

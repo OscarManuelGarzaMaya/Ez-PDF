@@ -9,12 +9,12 @@ type Props = {
 }
 
 const ICON_COLORS = [
-	'#00C9B1',
-	'#A78BFA',
-	'#60A5FA',
-	'#F87171',
-	'#FB923C',
-	'#34D399',
+	colors.accent.teal,
+	colors.accent.violet,
+	colors.accent.blue,
+	colors.accent.red,
+	colors.accent.orange,
+	colors.accent.green,
 ]
 
 const getIconColor = (id: string) => {
