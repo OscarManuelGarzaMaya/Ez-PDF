@@ -16,19 +16,31 @@ import {
 	Dimensions,
 } from 'react-native'
 import Svg, { G, Path } from 'react-native-svg'
+
+// Libraries
 import Pdf, { searchTextDirect } from 'react-native-pdf-jsi'
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import * as Clipboard from 'expo-clipboard'
 
+
+// Navigation
 import { RootStackParamList } from '../App'
+
+// Stores
 import { usePdfStore } from '../store/pdfStore'
 import { useThemeStore } from '../store/themeStore'
 import { useDeviceStore } from '../store/deviceStore'
-import { colors } from '../constants/theme'
-import ScreenWrapper from '../components/ScreenWrapper/ScreenWrapper'
 import { useBookmarkStore } from '../store/bookmarkStore'
 import type { Bookmark } from '../store/bookmarkStore'
+
+// Theme & colors
+import { colors } from '../constants/theme'
+
+// Components
+import ScreenWrapper from '../components/ScreenWrapper/ScreenWrapper'
+
+// Services
 import { generateSummary } from '../services/summary'
 import type { SummaryResult } from '../services/summary'
 
@@ -82,33 +94,56 @@ const ViewerScreen = () => {
 
 	const pdf = pdfs.find((p) => p.id === route.params.pdfId)
 
+	// — Navigation —
 	const [currentPage, setCurrentPage] = useState(1)
 	const [totalPages, setTotalPages] = useState(0)
+
+	// — UI Visibility —
 	const [barsVisible, setBarsVisible] = useState(true)
 	const [fabOpen, setFabOpen] = useState(false)
+
+	// — Search —
 	const [searchOpen, setSearchOpen] = useState(false)
 	const [searchQuery, setSearchQuery] = useState('')
 	const [searchResults, setSearchResults] = useState<SearchResult[]>([])
 	const [currentMatch, setCurrentMatch] = useState(0)
 	const [keyboardHeight, setKeyboardHeight] = useState(0)
+
+	// — Bookmarks —
 	const [bookmarksOpen, setBookmarksOpen] = useState(false)
+
+	// — Summary —
 	const [summaryOpen, setSummaryOpen] = useState(false)
 	const [summaryLoading, setSummaryLoading] = useState(false)
 	const [summaryResult, setSummaryResult] = useState<SummaryResult | null>(null)
 
+	// — Refs: PDF —
 	const pdfRef = useRef<any>(null)
+	const isNavigatingByButton = useRef(false)
+	const isInitialLoad = useRef(true)
+
+	// — Refs: Animations —
 	const barsAnim = useRef(new Animated.Value(1)).current
 	const backdropAnim = useRef(new Animated.Value(0)).current
 	const searchPanelAnim = useRef(new Animated.Value(0)).current
 	const bookmarksPanelAnim = useRef(new Animated.Value(0)).current
 	const summaryPanelAnim = useRef(new Animated.Value(0)).current
 	const miniFabAnims = useRef(MINI_FABS.map(() => new Animated.Value(0))).current
-	const isNavigatingByButton = useRef(false)
-	const isInitialLoad = useRef(true)
+
+	// — Refs: Panel callbacks & timers —
 	const searchDebounce = useRef<ReturnType<typeof setTimeout> | null>(null)
 	const closeSearchRef = useRef<() => void>(() => {})
 	const closeBookmarksRef = useRef<() => void>(() => {})
 	const closeSummaryRef = useRef<() => void>(() => {})
+
+	// dy = delta Y: pixels traveled vertically since the gesture started (positive = downward)
+	// dx = delta X: pixels traveled horizontally (positive = right, negative = left)
+	//
+	// onMoveShouldSetPanResponder: claim the gesture only if:
+	//   - dy > 10      → finger moved down at least 10px (avoids firing on accidental taps)
+	//   - dy > |dx|    → movement is more vertical than horizontal (avoids interfering with horizontal PDF scroll)
+	//
+	// onPanResponderRelease: on finger lift, close the panel if swiped down more than 50px (intentional swipe)
 
 	const panResponder = useRef(
 		PanResponder.create({
