@@ -10,24 +10,40 @@ import {
 	PanResponder,
 	TextInput,
 	Keyboard,
+	Alert,
+	ScrollView,
+	ActivityIndicator,
+	Dimensions,
 } from 'react-native'
 import Svg, { G, Path } from 'react-native-svg'
 import Pdf, { searchTextDirect } from 'react-native-pdf-jsi'
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import * as Clipboard from 'expo-clipboard'
 
 import { RootStackParamList } from '../App'
 import { usePdfStore } from '../store/pdfStore'
 import { useThemeStore } from '../store/themeStore'
+import { useDeviceStore } from '../store/deviceStore'
 import { colors } from '../constants/theme'
 import ScreenWrapper from '../components/ScreenWrapper/ScreenWrapper'
 import { useBookmarkStore } from '../store/bookmarkStore'
 import type { Bookmark } from '../store/bookmarkStore'
+import { generateSummary } from '../services/summary'
+import type { SummaryResult } from '../services/summary'
+
+const { height: SCREEN_HEIGHT } = Dimensions.get('window')
 
 const formatDate = (ts: number) => {
 	const d = new Date(ts)
 	const pad = (n: number) => String(n).padStart(2, '0')
 	return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+const formatResetDate = (dateStr: string): string => {
+	const [year, month, day] = dateStr.split('-').map(Number)
+	const d = new Date(year, month - 1, day)
+	return d.toLocaleDateString('es', { day: 'numeric', month: 'short' })
 }
 
 type ViewerRouteProp = RouteProp<RootStackParamList, 'Viewer'>
@@ -37,6 +53,7 @@ const BAR_HEIGHT = 56
 const FAB_SIZE = 56
 const MINI_FAB_SIZE = 44
 const PDF_ID = 'ez-pdf-viewer'
+const MAX_CREDITS = 5
 
 const CHEVRON_PATH = 'm9.71 17.71 5.7-5.71-5.7-5.71-1.42 1.42 4.3 4.29-4.3 4.29z'
 
@@ -60,6 +77,7 @@ const ViewerScreen = () => {
 	const insets = useSafeAreaInsets()
 	const { pdfs, updateLastOpened } = usePdfStore()
 	const { isDark } = useThemeStore()
+	const { deviceId } = useDeviceStore()
 	const theme = isDark ? colors.dark : colors.light
 
 	const pdf = pdfs.find((p) => p.id === route.params.pdfId)
@@ -73,16 +91,24 @@ const ViewerScreen = () => {
 	const [searchResults, setSearchResults] = useState<SearchResult[]>([])
 	const [currentMatch, setCurrentMatch] = useState(0)
 	const [keyboardHeight, setKeyboardHeight] = useState(0)
+	const [bookmarksOpen, setBookmarksOpen] = useState(false)
+	const [summaryOpen, setSummaryOpen] = useState(false)
+	const [summaryLoading, setSummaryLoading] = useState(false)
+	const [summaryResult, setSummaryResult] = useState<SummaryResult | null>(null)
 
 	const pdfRef = useRef<any>(null)
 	const barsAnim = useRef(new Animated.Value(1)).current
 	const backdropAnim = useRef(new Animated.Value(0)).current
 	const searchPanelAnim = useRef(new Animated.Value(0)).current
+	const bookmarksPanelAnim = useRef(new Animated.Value(0)).current
+	const summaryPanelAnim = useRef(new Animated.Value(0)).current
 	const miniFabAnims = useRef(MINI_FABS.map(() => new Animated.Value(0))).current
 	const isNavigatingByButton = useRef(false)
 	const isInitialLoad = useRef(true)
 	const searchDebounce = useRef<ReturnType<typeof setTimeout> | null>(null)
 	const closeSearchRef = useRef<() => void>(() => {})
+	const closeBookmarksRef = useRef<() => void>(() => {})
+	const closeSummaryRef = useRef<() => void>(() => {})
 
 	const panResponder = useRef(
 		PanResponder.create({
@@ -93,15 +119,20 @@ const ViewerScreen = () => {
 		})
 	).current
 
-	const [bookmarksOpen, setBookmarksOpen] = useState(false)
-	const bookmarksPanelAnim = useRef(new Animated.Value(0)).current
-	const closeBookmarksRef = useRef<() => void>(() => {})
-
 	const bookmarksPanResponder = useRef(
 		PanResponder.create({
 			onMoveShouldSetPanResponder: (_, { dy, dx }) => dy > 10 && dy > Math.abs(dx),
 			onPanResponderRelease: (_, { dy }) => {
 				if (dy > 50) closeBookmarksRef.current()
+			},
+		})
+	).current
+
+	const summaryPanResponder = useRef(
+		PanResponder.create({
+			onMoveShouldSetPanResponder: (_, { dy, dx }) => dy > 10 && dy > Math.abs(dx),
+			onPanResponderRelease: (_, { dy }) => {
+				if (dy > 50) closeSummaryRef.current()
 			},
 		})
 	).current
@@ -140,6 +171,7 @@ const ViewerScreen = () => {
 
 	const openBookmarks = () => {
 		if (fabOpen) closeFab()
+		if (summaryOpen) closeSummary()
 		setBookmarksOpen(true)
 		Animated.spring(bookmarksPanelAnim, {
 			toValue: 1,
@@ -169,6 +201,7 @@ const ViewerScreen = () => {
 	const openSearch = () => {
 		if (fabOpen) closeFab()
 		if (bookmarksOpen) closeBookmarks()
+		if (summaryOpen) closeSummary()
 		setSearchOpen(true)
 		Animated.spring(searchPanelAnim, {
 			toValue: 1,
@@ -190,6 +223,136 @@ const ViewerScreen = () => {
 	}
 
 	closeSearchRef.current = closeSearch
+
+	const openSummary = () => {
+		if (fabOpen) closeFab()
+		Alert.alert(
+			'Resumen con IA',
+			'¿Deseas generar un resumen de este documento?',
+			[
+				{ text: 'No', style: 'cancel' },
+				{ text: 'Sí', onPress: handleGenerateSummary },
+			]
+		)
+	}
+
+	const handleGenerateSummary = async () => {
+		if (summaryOpen) {
+			setSummaryResult(null)
+			setSummaryLoading(true)
+		} else {
+			setSummaryOpen(true)
+			setSummaryLoading(true)
+			setSummaryResult(null)
+			Animated.spring(summaryPanelAnim, {
+				toValue: 1,
+				useNativeDriver: true,
+				tension: 100,
+				friction: 10,
+			}).start()
+		}
+
+		const result = await generateSummary(deviceId, pdf.uri)
+		setSummaryResult(result)
+		setSummaryLoading(false)
+	}
+
+	const closeSummary = () => {
+		Animated.timing(summaryPanelAnim, { toValue: 0, duration: 250, useNativeDriver: true }).start(
+			() => {
+				setSummaryOpen(false)
+				setSummaryResult(null)
+				setSummaryLoading(false)
+			}
+		)
+	}
+
+	closeSummaryRef.current = closeSummary
+
+	const renderSummaryContent = () => {
+		if (summaryLoading) {
+			return (
+				<View style={styles.summaryState}>
+					<ActivityIndicator size="large" color={colors.accent.teal} />
+					<Text style={[styles.summaryStateMessage, { color: theme.textMuted }]}>
+						Generando resumen...
+					</Text>
+				</View>
+			)
+		}
+
+		if (!summaryResult) return null
+
+		if (summaryResult.ok) {
+			return (
+				<ScrollView showsVerticalScrollIndicator={false} style={styles.summaryScroll}>
+					<View
+						style={[
+							styles.summaryBox,
+							{ borderColor: colors.accent.teal, backgroundColor: theme.background },
+						]}
+					>
+						<Text style={[styles.summaryText, { color: theme.text }]}>{summaryResult.summary}</Text>
+					</View>
+
+					<View style={styles.creditSection}>
+						<Text style={[styles.creditLabel, { color: theme.textMuted }]}>
+							{summaryResult.used_count} de {MAX_CREDITS} disponibles este mes
+						</Text>
+						<View style={[styles.progressTrack, { backgroundColor: theme.border }]}>
+							<View
+								style={[
+									styles.progressFill,
+									{
+										width: `${(summaryResult.used_count / MAX_CREDITS) * 100}%`,
+										backgroundColor: colors.accent.teal,
+									},
+								]}
+							/>
+						</View>
+						<Text style={[styles.resetDate, { color: theme.textMuted }]}>
+							Se renueva el {formatResetDate(summaryResult.reset_date)}
+						</Text>
+					</View>
+
+					<TouchableOpacity
+						style={[styles.copyButton, { backgroundColor: colors.accent.teal }]}
+						onPress={() => Clipboard.setStringAsync((summaryResult as Extract<SummaryResult, { ok: true }>).summary)}
+					>
+						<Text style={styles.copyButtonText}>Copiar resumen</Text>
+					</TouchableOpacity>
+
+					<View style={{ height: 16 }} />
+				</ScrollView>
+			)
+		}
+
+		if (summaryResult.limitReached) {
+			return (
+				<View style={styles.summaryState}>
+					<Text style={styles.summaryStateIcon}>📋</Text>
+					<Text style={[styles.summaryStateTitle, { color: theme.text }]}>
+						Límite mensual alcanzado
+					</Text>
+					<Text style={[styles.summaryStateMessage, { color: theme.textMuted }]}>
+						Se renueva el {formatResetDate(summaryResult.reset_date)}
+					</Text>
+				</View>
+			)
+		}
+
+		return (
+			<View style={styles.summaryState}>
+				<Text style={styles.summaryStateIcon}>⚠️</Text>
+				<Text style={[styles.summaryStateTitle, { color: theme.text }]}>
+					Ocurrió un error
+				</Text>
+				<Text style={[styles.summaryStateMessage, { color: theme.textMuted }]}>
+					Inténtalo de nuevo más tarde
+				</Text>
+			</View>
+		)
+	}
 
 	const performSearch = (query: string) => {
 		if (searchDebounce.current) clearTimeout(searchDebounce.current)
@@ -218,7 +381,7 @@ const ViewerScreen = () => {
 	}
 
 	const miniFabHandlers = [
-		() => {}, // AI Overview — Milestone 2
+		openSummary,
 		openBookmarks,
 		openSearch,
 	]
@@ -425,11 +588,11 @@ const ViewerScreen = () => {
 				</TouchableOpacity>
 			</View>
 
-			{/* Search Panel */}
+			{/* Bookmarks Panel */}
 			{bookmarksOpen && (
 				<Animated.View
 					style={[
-						styles.bookmarksPanel,
+						styles.bottomPanel,
 						{
 							backgroundColor: theme.surface,
 							paddingBottom: insets.bottom || 12,
@@ -445,12 +608,12 @@ const ViewerScreen = () => {
 					]}
 					{...bookmarksPanResponder.panHandlers}
 				>
-					<View style={styles.searchHandle} />
+					<View style={styles.panelHandle} />
 
-					<View style={styles.bookmarksPanelHeader}>
-						<Text style={[styles.bookmarksPanelTitle, { color: theme.text }]}>Marcadores</Text>
-						<TouchableOpacity onPress={closeBookmarks} style={styles.searchCloseButton}>
-							<Text style={[styles.searchCloseIcon, { color: theme.textMuted }]}>✕</Text>
+					<View style={styles.panelHeader}>
+						<Text style={[styles.panelTitle, { color: theme.text }]}>Marcadores</Text>
+						<TouchableOpacity onPress={closeBookmarks} style={styles.panelCloseButton}>
+							<Text style={[styles.panelCloseIcon, { color: theme.textMuted }]}>✕</Text>
 						</TouchableOpacity>
 					</View>
 
@@ -497,6 +660,41 @@ const ViewerScreen = () => {
 				</Animated.View>
 			)}
 
+			{/* Summary Panel */}
+			{summaryOpen && (
+				<Animated.View
+					style={[
+						styles.bottomPanel,
+						styles.summaryPanel,
+						{
+							backgroundColor: theme.surface,
+							paddingBottom: insets.bottom || 12,
+							transform: [
+								{
+									translateY: summaryPanelAnim.interpolate({
+										inputRange: [0, 1],
+										outputRange: [600, 0],
+									}),
+								},
+							],
+						},
+					]}
+					{...summaryPanResponder.panHandlers}
+				>
+					<View style={styles.panelHandle} />
+
+					<View style={styles.panelHeader}>
+						<Text style={[styles.panelTitle, { color: theme.text }]}>Resumen con IA</Text>
+						<TouchableOpacity onPress={closeSummary} style={styles.panelCloseButton}>
+							<Text style={[styles.panelCloseIcon, { color: theme.textMuted }]}>✕</Text>
+						</TouchableOpacity>
+					</View>
+
+					{renderSummaryContent()}
+				</Animated.View>
+			)}
+
+			{/* Search Panel */}
 			{searchOpen && (
 				<Animated.View
 					style={[
@@ -517,11 +715,11 @@ const ViewerScreen = () => {
 					]}
 					{...panResponder.panHandlers}
 				>
-					<View style={styles.searchHandle} />
+					<View style={styles.panelHandle} />
 
 					<View style={styles.searchRow}>
-						<TouchableOpacity onPress={closeSearch} style={styles.searchCloseButton}>
-							<Text style={[styles.searchCloseIcon, { color: theme.textMuted }]}>✕</Text>
+						<TouchableOpacity onPress={closeSearch} style={styles.panelCloseButton}>
+							<Text style={[styles.panelCloseIcon, { color: theme.textMuted }]}>✕</Text>
 						</TouchableOpacity>
 
 						<TextInput
@@ -693,7 +891,8 @@ const styles = StyleSheet.create({
 		fontSize: 18,
 		color: '#fff',
 	},
-	searchPanel: {
+	// Shared bottom panel base
+	bottomPanel: {
 		position: 'absolute',
 		left: 0,
 		right: 0,
@@ -709,7 +908,10 @@ const styles = StyleSheet.create({
 		shadowRadius: 8,
 		zIndex: 30,
 	},
-	searchHandle: {
+	summaryPanel: {
+		maxHeight: SCREEN_HEIGHT * 0.78,
+	},
+	panelHandle: {
 		width: 40,
 		height: 4,
 		borderRadius: 2,
@@ -717,75 +919,26 @@ const styles = StyleSheet.create({
 		alignSelf: 'center',
 		marginBottom: 12,
 	},
-	searchRow: {
+	panelHeader: {
 		flexDirection: 'row',
 		alignItems: 'center',
-		gap: 8,
-		marginBottom: 8,
+		justifyContent: 'space-between',
+		marginBottom: 12,
 	},
-	searchCloseButton: {
+	panelTitle: {
+		fontSize: 16,
+		fontWeight: '700',
+	},
+	panelCloseButton: {
 		width: 32,
 		height: 32,
 		alignItems: 'center',
 		justifyContent: 'center',
 	},
-	searchCloseIcon: {
+	panelCloseIcon: {
 		fontSize: 16,
 	},
-	searchInput: {
-		flex: 1,
-		height: 40,
-		borderWidth: 1,
-		borderRadius: 10,
-		paddingHorizontal: 12,
-		fontSize: 15,
-	},
-	searchCounter: {
-		fontSize: 13,
-		minWidth: 44,
-		textAlign: 'right',
-	},
-	searchNavRow: {
-		flexDirection: 'row',
-		justifyContent: 'center',
-		gap: 24,
-		paddingBottom: 4,
-	},
-	searchNavButton: {
-		paddingVertical: 6,
-		paddingHorizontal: 12,
-	},
-	searchNavText: {
-		fontSize: 14,
-		fontWeight: '600',
-	},
-	bookmarksPanel: {
-		position: 'absolute',
-		left: 0,
-		right: 0,
-		bottom: 0,
-		maxHeight: 400,
-		borderTopLeftRadius: 16,
-		borderTopRightRadius: 16,
-		paddingTop: 8,
-		paddingHorizontal: 16,
-		elevation: 12,
-		shadowColor: '#000',
-		shadowOffset: { width: 0, height: -3 },
-		shadowOpacity: 0.2,
-		shadowRadius: 8,
-		zIndex: 30,
-	},
-	bookmarksPanelHeader: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		justifyContent: 'space-between',
-		marginBottom: 8,
-	},
-	bookmarksPanelTitle: {
-		fontSize: 16,
-		fontWeight: '700',
-	},
+	// Bookmarks
 	bookmarksEmpty: {
 		paddingVertical: 32,
 		alignItems: 'center',
@@ -824,6 +977,117 @@ const styles = StyleSheet.create({
 	},
 	bookmarkIcon: {
 		fontSize: 20,
+	},
+	// Summary content
+	summaryScroll: {
+		flexGrow: 0,
+	},
+	summaryBox: {
+		borderLeftWidth: 3,
+		borderRadius: 4,
+		padding: 14,
+		marginBottom: 16,
+	},
+	summaryText: {
+		fontSize: 14,
+		lineHeight: 22,
+	},
+	creditSection: {
+		gap: 6,
+		marginBottom: 16,
+	},
+	creditLabel: {
+		fontSize: 13,
+		fontWeight: '600',
+	},
+	progressTrack: {
+		height: 6,
+		borderRadius: 3,
+		overflow: 'hidden',
+	},
+	progressFill: {
+		height: 6,
+		borderRadius: 3,
+	},
+	resetDate: {
+		fontSize: 12,
+	},
+	copyButton: {
+		borderRadius: 10,
+		paddingVertical: 13,
+		alignItems: 'center',
+	},
+	copyButtonText: {
+		color: '#fff',
+		fontSize: 15,
+		fontWeight: '600',
+	},
+	summaryState: {
+		alignItems: 'center',
+		paddingVertical: 36,
+		gap: 10,
+	},
+	summaryStateIcon: {
+		fontSize: 44,
+	},
+	summaryStateTitle: {
+		fontSize: 16,
+		fontWeight: '600',
+		textAlign: 'center',
+	},
+	summaryStateMessage: {
+		fontSize: 14,
+		textAlign: 'center',
+	},
+	// Search panel
+	searchPanel: {
+		position: 'absolute',
+		left: 0,
+		right: 0,
+		bottom: 0,
+		borderTopLeftRadius: 16,
+		borderTopRightRadius: 16,
+		paddingTop: 8,
+		paddingHorizontal: 16,
+		elevation: 12,
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: -3 },
+		shadowOpacity: 0.2,
+		shadowRadius: 8,
+		zIndex: 30,
+	},
+	searchRow: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		gap: 8,
+		marginBottom: 8,
+	},
+	searchInput: {
+		flex: 1,
+		height: 40,
+		borderWidth: 1,
+		borderRadius: 10,
+		paddingHorizontal: 12,
+		fontSize: 15,
+	},
+	searchCounter: {
+		fontSize: 13,
+		minWidth: 44,
+		textAlign: 'right',
+	},
+	searchNavRow: {
+		flexDirection: 'row',
+		justifyContent: 'center',
+		gap: 24,
+		paddingBottom: 4,
+	},
+	searchNavButton: {
+		paddingVertical: 6,
+		paddingHorizontal: 12,
+	},
+	searchNavText: {
+		fontSize: 14,
+		fontWeight: '600',
 	},
 })
 
