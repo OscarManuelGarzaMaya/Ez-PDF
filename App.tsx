@@ -1,4 +1,5 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
+import { useColorScheme } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
 
 // Navigation
@@ -26,9 +27,18 @@ export type RootStackParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>()
 
 export default function App() {
-	const { isDark } = useThemeStore()
+	const colorScheme = useColorScheme()
+	const { isDark, _hasHydrated: themeHydrated, syncWithSystem } = useThemeStore()
 	const theme = isDark ? colors.dark : colors.light
 	const { deviceId, _hasHydrated } = useDeviceStore()
+	const didInitialSync = useRef(false)
+
+	useEffect(() => {
+		if (!themeHydrated) return
+		const isInitialSync = !didInitialSync.current
+		didInitialSync.current = true
+		syncWithSystem(colorScheme === 'dark', isInitialSync)
+	}, [themeHydrated, colorScheme])
 
 	useEffect(() => {
 		if (_hasHydrated) initSession(deviceId)
