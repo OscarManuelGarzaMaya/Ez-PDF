@@ -13,7 +13,7 @@ type ThemeStore = {
 export const useThemeStore = create<ThemeStore>()(
 	persist(
 		(set) => ({
-			isDark: false,
+			isDark: true,
 			isManual: false,
 			_hasHydrated: false,
 			// Flip theme and mark as manually overridden
