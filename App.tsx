@@ -1,6 +1,9 @@
 import { useEffect, useRef } from 'react'
 import { useColorScheme } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
+import * as SplashScreen from 'expo-splash-screen'
+
+SplashScreen.preventAutoHideAsync()
 
 // Navigation
 import { NavigationContainer } from '@react-navigation/native'
@@ -43,6 +46,12 @@ export default function App() {
 	useEffect(() => {
 		if (_hasHydrated) initSession(deviceId)
 	}, [_hasHydrated])
+
+	useEffect(() => {
+		if (_hasHydrated && themeHydrated) {
+			setTimeout(() => SplashScreen.hideAsync(), 1000)
+		}
+	}, [_hasHydrated, themeHydrated])
 
 	return (
 		<SafeAreaProvider>
