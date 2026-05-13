@@ -1,25 +1,11 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import { PDF } from '../../store/pdfStore'
-import { colors } from '../../constants/theme'
+import { colors, ICON_COLORS } from '../../constants/theme'
 
 type Props = {
 	isDark: boolean
 	pdf: PDF
 	onPress: (pdf: PDF) => void
-}
-
-const ICON_COLORS = [
-	colors.accent.teal,
-	colors.accent.violet,
-	colors.accent.blue,
-	colors.accent.red,
-	colors.accent.orange,
-	colors.accent.green,
-]
-
-const getIconColor = (id: string) => {
-	const index = id.charCodeAt(0) % ICON_COLORS.length
-	return ICON_COLORS[index]
 }
 
 const formatDate = (timestamp: number) => {
@@ -32,7 +18,7 @@ const formatDate = (timestamp: number) => {
 
 const PDFListItem = ({ isDark, pdf, onPress }: Props) => {
 	const theme = isDark ? colors.dark : colors.light
-	const iconColor = getIconColor(pdf.id)
+	const iconColor = ICON_COLORS[pdf.colorIndex ?? pdf.id.charCodeAt(0) % ICON_COLORS.length]
 
 	return (
 		<TouchableOpacity
