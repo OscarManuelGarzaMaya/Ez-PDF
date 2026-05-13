@@ -1,3 +1,12 @@
+export const ICON_COLORS = [
+	'#00C9B1', // teal
+	'#A78BFA', // violet
+	'#60A5FA', // blue
+	'#F87171', // red
+	'#FB923C', // orange
+	'#34D399', // green
+]
+
 export const colors = {
 	dark: {
 		background: '#0B0D14',

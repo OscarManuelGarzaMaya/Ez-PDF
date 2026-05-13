@@ -7,7 +7,7 @@ import {
 } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { PDF } from '../../store/pdfStore'
-import { colors } from '../../constants/theme'
+import { colors, ICON_COLORS } from '../../constants/theme'
 
 type Props = {
 	isDark: boolean
@@ -35,8 +35,8 @@ const RecentCarousel = ({ isDark, pdfs, onPress}: Props)=>{
 										style={[styles.card, { backgroundColor: theme.surface }]}
 										onPress={() => onPress(pdf)}
 									>
-										<View style={styles.cardIcon}>
-											<Text style={styles.cardIconText}>PDf</Text>
+										<View style={[styles.cardIcon, { backgroundColor: ICON_COLORS[pdf.colorIndex ?? pdf.id.charCodeAt(0) % ICON_COLORS.length] }]}>
+											<Text style={styles.cardIconText}>PDF</Text>
 										</View>
 										<Text
 											style={[styles.cardName, { color: theme.text }]}
@@ -90,7 +90,6 @@ const styles = StyleSheet.create({
 		width: 44,
 		height: 44,
 		borderRadius: 10,
-		backgroundColor: colors.accent.teal,
 		alignItems: 'center',
 		justifyContent: 'center',
 	},

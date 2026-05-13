@@ -1,6 +1,7 @@
 import * as DocumentPicker from 'expo-document-picker'
 import * as FileSystem from 'expo-file-system/legacy'
 import { PDF } from '../store/pdfStore'
+import { ICON_COLORS } from '../constants/theme'
 
 export const pickPDF = async (): Promise<PDF | null> => {
 	try {
@@ -26,6 +27,7 @@ export const pickPDF = async (): Promise<PDF | null> => {
 			size: file.size ?? 0,
 			pages: 0,
 			lastOpened: Date.now(),
+			colorIndex: Math.floor(Math.random() * ICON_COLORS.length),
 		}
 
 		return pdf
