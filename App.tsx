@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useColorScheme } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
 import * as SplashScreen from 'expo-splash-screen'
+import * as FileSystem from 'expo-file-system/legacy'
 
 SplashScreen.preventAutoHideAsync()
 
@@ -21,6 +22,7 @@ import ViewerScreen from './screens/ViewerScreen'
 // Session
 import { useDeviceStore } from './store/deviceStore'
 import { initSession } from './services/session'
+import { usePdfStore } from './store/pdfStore'
 
 export type RootStackParamList = {
 	Home: undefined
@@ -34,6 +36,7 @@ export default function App() {
 	const { isDark, _hasHydrated: themeHydrated, syncWithSystem } = useThemeStore()
 	const theme = isDark ? colors.dark : colors.light
 	const { deviceId, _hasHydrated } = useDeviceStore()
+	const { pdfs, pruneDeleted } = usePdfStore()
 	const didInitialSync = useRef(false)
 
 	useEffect(() => {
@@ -45,6 +48,21 @@ export default function App() {
 
 	useEffect(() => {
 		if (_hasHydrated) initSession(deviceId)
+	}, [_hasHydrated])
+
+	useEffect(() => {
+		if (!_hasHydrated) return
+		const pruneStaleFiles = async () => {
+			const checks = await Promise.all(
+				pdfs.map(async (p) => {
+					const info = await FileSystem.getInfoAsync(p.uri)
+					return info.exists ? null : p.id
+				})
+			)
+			const stale = checks.filter((id): id is string => id !== null)
+			if (stale.length > 0) pruneDeleted(stale)
+		}
+		pruneStaleFiles()
 	}, [_hasHydrated])
 
 	useEffect(() => {
