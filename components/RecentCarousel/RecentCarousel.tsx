@@ -33,6 +33,7 @@ const RecentCarousel = ({ isDark, pdfs, onPress}: Props)=>{
 									<TouchableOpacity
 										key={pdf.id}
 										style={[styles.card, { backgroundColor: theme.surface }]}
+										onPress={() => onPress(pdf)}
 									>
 										<View style={styles.cardIcon}>
 											<Text style={styles.cardIconText}>PDf</Text>
