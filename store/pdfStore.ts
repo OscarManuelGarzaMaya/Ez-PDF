@@ -9,6 +9,7 @@ export type PDF = {
 	size: number
 	pages: number
 	lastOpened: number
+	colorIndex: number
 }
 
 type PDFStore = {
@@ -30,7 +31,18 @@ export const usePdfStore = create<PDFStore>()(
 			activePdf: null,
 			_hasHydrated: false,
 			setHasHydrated: (value) => set({ _hasHydrated: value }),
-			addPdf: (pdf) => set((state) => ({ pdfs: [...state.pdfs, pdf] })),
+			addPdf: (pdf) =>
+				set((state) => {
+					const duplicate = state.pdfs.find((p) => p.uri === pdf.uri)
+					if (duplicate) {
+						return {
+							pdfs: state.pdfs.map((p) =>
+								p.id === duplicate.id ? { ...p, lastOpened: Date.now() } : p
+							),
+						}
+					}
+					return { pdfs: [...state.pdfs, pdf] }
+				}),
 			setActivePdf: (pdf) => set({ activePdf: pdf }),
 			removePdf: (id) =>
 				set((state) => ({ pdfs: state.pdfs.filter((p) => p.id !== id) })),
