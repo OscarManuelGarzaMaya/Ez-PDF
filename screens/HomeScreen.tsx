@@ -11,6 +11,7 @@ import { colors } from '../constants/theme'
 
 // Stores
 import { usePdfStore, PDF } from '../store/pdfStore'
+import { useBookmarkStore } from '../store/bookmarkStore'
 
 // Services
 import { pickPDF } from '../services/filePicker'
@@ -27,7 +28,8 @@ type HomeNavProp = NativeStackNavigationProp<RootStackParamList, 'Home'>
 
 const HomeScreen = () => {
 	const navigation = useNavigation<HomeNavProp>()
-	const { pdfs, addPdf, _hasHydrated } = usePdfStore()
+	const { pdfs, addPdf, removePdf, _hasHydrated } = usePdfStore()
+	const { removeAllBookmarks } = useBookmarkStore()
 	const { isDark } = useThemeStore()
 	const theme = isDark ? colors.dark : colors.light
 
@@ -50,6 +52,11 @@ const HomeScreen = () => {
 
 	const handlePdfPress = (pdfs: PDF) => {
 		navigation.navigate('Viewer', { pdfId: pdfs.id })
+	}
+
+	const handlePdfDelete = (pdf: PDF) => {
+		removePdf(pdf.id)
+		removeAllBookmarks(pdf.id)
 	}
 
 	if (!_hasHydrated) {
@@ -97,6 +104,7 @@ const HomeScreen = () => {
 							isDark={isDark}
 							pdf={item}
 							onPress={handlePdfPress}
+							onDelete={handlePdfDelete}
 						/>
 					)}
 					ListEmptyComponent={<Text style={[styles.emptySearch, { color: theme.textMuted }]}>No se encontraron resultados</Text>}

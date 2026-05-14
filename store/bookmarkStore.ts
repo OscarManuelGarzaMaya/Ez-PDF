@@ -11,6 +11,7 @@ type BookmarkStore = {
 	bookmarks: Record<string, Bookmark[]>
 	addBookmark: (fileId: string, page: number) => void
 	removeBookmark: (filedId: string, page: number) => void
+	removeAllBookmarks: (fileId: string) => void
 	getBookmark: (fieldId: string) => Bookmark[]
 }
 
@@ -38,6 +39,12 @@ export const useBookmarkStore = create<BookmarkStore>()(
 						[fileId]: current.filter((b) => b.page !== page),
 					},
 				}))
+			},
+			removeAllBookmarks: (fileId) => {
+				set((state) => {
+					const { [fileId]: _, ...rest } = state.bookmarks
+					return { bookmarks: rest }
+				})
 			},
 			getBookmark: (fileId) => get().bookmarks[fileId] ?? [],
 		}),

@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native'
 import { PDF } from '../../store/pdfStore'
 import { colors, ICON_COLORS } from '../../constants/theme'
 
@@ -6,6 +6,7 @@ type Props = {
 	isDark: boolean
 	pdf: PDF
 	onPress: (pdf: PDF) => void
+	onDelete: (pdf: PDF) => void
 }
 
 const formatDate = (timestamp: number) => {
@@ -16,14 +17,27 @@ const formatDate = (timestamp: number) => {
 	})
 }
 
-const PDFListItem = ({ isDark, pdf, onPress }: Props) => {
+const PDFListItem = ({ isDark, pdf, onPress, onDelete }: Props) => {
 	const theme = isDark ? colors.dark : colors.light
 	const iconColor = ICON_COLORS[pdf.colorIndex ?? pdf.id.charCodeAt(0) % ICON_COLORS.length]
+
+	const handleLongPress = () => {
+		Alert.alert(
+			'Eliminar PDF',
+			`¿Deseas eliminar "${pdf.name}" de tu biblioteca?`,
+			[
+				{ text: 'Cancelar', style: 'cancel' },
+				{ text: 'Eliminar', style: 'destructive', onPress: () => onDelete(pdf) },
+			],
+			{ cancelable: true }
+		)
+	}
 
 	return (
 		<TouchableOpacity
 			style={[styles.container, { borderBottomColor: theme.border }]}
 			onPress={() => onPress(pdf)}
+			onLongPress={handleLongPress}
 		>
 			<View style={[styles.icon, { backgroundColor: iconColor }]}>
 				<Text style={styles.iconText}>PDF</Text>
