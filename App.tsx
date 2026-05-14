@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { useColorScheme } from 'react-native'
+import { useColorScheme, Linking } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
 import * as SplashScreen from 'expo-splash-screen'
 import * as FileSystem from 'expo-file-system/legacy'
@@ -7,7 +7,7 @@ import * as FileSystem from 'expo-file-system/legacy'
 SplashScreen.preventAutoHideAsync()
 
 // Navigation
-import { NavigationContainer } from '@react-navigation/native'
+import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 
@@ -23,6 +23,7 @@ import ViewerScreen from './screens/ViewerScreen'
 import { useDeviceStore } from './store/deviceStore'
 import { initSession } from './services/session'
 import { usePdfStore } from './store/pdfStore'
+import { importFromUri } from './services/importFromIntent'
 
 export type RootStackParamList = {
 	Home: undefined
@@ -30,6 +31,7 @@ export type RootStackParamList = {
 }
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
+export const navigationRef = createNavigationContainerRef<RootStackParamList>()
 
 export default function App() {
 	const colorScheme = useColorScheme()
@@ -38,6 +40,44 @@ export default function App() {
 	const { deviceId, _hasHydrated } = useDeviceStore()
 	const { pdfs, pruneDeleted } = usePdfStore()
 	const didInitialSync = useRef(false)
+	const pendingUri = useRef<string | null>(null)
+	const pendingPdfId = useRef<string | null>(null)
+
+	const navigateToViewer = (pdfId: string) => {
+		if (navigationRef.isReady()) {
+			navigationRef.navigate('Viewer', { pdfId })
+		} else {
+			// Nav container not mounted yet — defer until onReady fires
+			pendingPdfId.current = pdfId
+		}
+	}
+
+	const handleIncomingPdf = async (uri: string) => {
+		const pdfId = await importFromUri(uri)
+		if (!pdfId) return
+		navigateToViewer(pdfId)
+	}
+
+	// Capture cold-start URI before store is hydrated
+	useEffect(() => {
+		Linking.getInitialURL().then((url) => {
+			if (url) pendingUri.current = url
+		})
+
+		const sub = Linking.addEventListener('url', ({ url }) => {
+			if (url) handleIncomingPdf(url)
+		})
+
+		return () => sub.remove()
+	}, [])
+
+	// Process cold-start URI once store is ready
+	useEffect(() => {
+		if (!_hasHydrated || !pendingUri.current) return
+		const uri = pendingUri.current
+		pendingUri.current = null
+		handleIncomingPdf(uri)
+	}, [_hasHydrated])
 
 	useEffect(() => {
 		if (!themeHydrated) return
@@ -77,7 +117,15 @@ export default function App() {
 				style={isDark ? 'light' : 'dark'}
 				backgroundColor={theme.surface}
 			/>
-			<NavigationContainer>
+			<NavigationContainer
+				ref={navigationRef}
+				onReady={() => {
+					if (pendingPdfId.current) {
+						navigationRef.navigate('Viewer', { pdfId: pendingPdfId.current })
+						pendingPdfId.current = null
+					}
+				}}
+			>
 				<Stack.Navigator
 					initialRouteName="Home"
 					screenOptions={{ headerShown: false }}
