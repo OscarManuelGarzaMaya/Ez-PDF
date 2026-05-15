@@ -11,6 +11,7 @@ import {
 	TextInput,
 	Keyboard,
 	Alert,
+	BackHandler,
 	ScrollView,
 	ActivityIndicator,
 	Dimensions,
@@ -192,6 +193,16 @@ const ViewerScreen = () => {
 	}, [pdf])
 
 	useEffect(() => {
+		const handler = BackHandler.addEventListener('hardwareBackPress', () => {
+			if (searchOpen) { closeSearchRef.current(); return true }
+			if (bookmarksOpen) { closeBookmarksRef.current(); return true }
+			if (summaryOpen) { closeSummaryRef.current(); return true }
+			return false
+		})
+		return () => handler.remove()
+	}, [searchOpen, bookmarksOpen, summaryOpen])
+
+	useEffect(() => {
 		const show = Keyboard.addListener('keyboardDidShow', (e) => {
 			setKeyboardHeight(e.endCoordinates.height)
 		})
@@ -269,7 +280,8 @@ const ViewerScreen = () => {
 			[
 				{ text: t('common.no'), style: 'cancel' },
 				{ text: t('common.yes'), onPress: handleGenerateSummary },
-			]
+			],
+			{ cancelable: true }
 		)
 	}
 
