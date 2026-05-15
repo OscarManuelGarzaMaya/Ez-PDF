@@ -1,0 +1,59 @@
+{
+	"common": {
+		"cancel": "Cancelar",
+		"loading": "Cargando...",
+		"no": "No",
+		"yes": "Sí",
+		"delete": "Eliminar"
+	},
+	"appBar": {
+		"title": "My PDFs"
+	},
+	"searchBar": {
+		"placeholder": "Buscar"
+	},
+	"home": {
+		"sectionAll": "Todos",
+		"noResults": "No se encontraron resultados"
+	},
+	"emptyState": {
+		"title": "¡Bienvenido a Ez-PDF!",
+		"description": "Aún no tienes documentos importados.\nAbre tu primer PDF para empezar.",
+		"cta": "Abrir un PDF"
+	},
+	"pdfListItem": {
+		"deleteTitle": "Eliminar PDF",
+		"deleteMessage": "¿Deseas eliminar \"{{name}}\" de tu biblioteca?"
+	},
+	"recentCarousel": {
+		"title": "Recientes"
+	},
+	"themeMenu": {
+		"lightMode": "☀️  Modo claro",
+		"darkMode": "🌙  Modo oscuro"
+	},
+	"viewer": {
+		"previous": "‹ Anterior",
+		"next": "Siguiente ›",
+		"pageOf": "{{current}} de {{total}}",
+		"summaryAlertTitle": "Resumen con IA",
+		"summaryAlertMessage": "¿Deseas generar un resumen de este documento?",
+		"bookmarksTitle": "Marcadores",
+		"summaryTitle": "Resumen con IA",
+		"noBookmarks": "No hay marcadores. Usa ★ en la barra superior para guardar páginas.",
+		"page": "Pág. {{page}}",
+		"generating": "Generando resumen...",
+		"creditsUsed": "{{used}} de {{max}} disponibles este mes",
+		"renewsOn": "Se renueva el {{date}}",
+		"copySummary": "Copiar resumen",
+		"limitTitle": "Límite mensual alcanzado",
+		"errorTitle": "Ocurrió un error",
+		"errorMessage": "Inténtalo de nuevo más tarde",
+		"searchPlaceholder": "Buscar en el documento...",
+		"searchPrev": "← Anterior",
+		"searchNext": "Siguiente →",
+		"aiOverview": "AI Overview",
+		"bookmarks": "Marcadores",
+		"search": "Búsqueda"
+	}
+}

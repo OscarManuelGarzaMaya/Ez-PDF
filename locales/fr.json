@@ -1,0 +1,59 @@
+{
+	"common": {
+		"cancel": "Annuler",
+		"loading": "Chargement...",
+		"no": "Non",
+		"yes": "Oui",
+		"delete": "Supprimer"
+	},
+	"appBar": {
+		"title": "My PDFs"
+	},
+	"searchBar": {
+		"placeholder": "Rechercher"
+	},
+	"home": {
+		"sectionAll": "Tous",
+		"noResults": "Aucun résultat trouvé"
+	},
+	"emptyState": {
+		"title": "Bienvenue sur Ez-PDF !",
+		"description": "Vous n'avez pas encore importé de documents.\nOuvrez votre premier PDF pour commencer.",
+		"cta": "Ouvrir un PDF"
+	},
+	"pdfListItem": {
+		"deleteTitle": "Supprimer le PDF",
+		"deleteMessage": "Voulez-vous supprimer \"{{name}}\" de votre bibliothèque ?"
+	},
+	"recentCarousel": {
+		"title": "Récents"
+	},
+	"themeMenu": {
+		"lightMode": "☀️  Mode clair",
+		"darkMode": "🌙  Mode sombre"
+	},
+	"viewer": {
+		"previous": "‹ Précédent",
+		"next": "Suivant ›",
+		"pageOf": "{{current}} sur {{total}}",
+		"summaryAlertTitle": "Résumé IA",
+		"summaryAlertMessage": "Voulez-vous générer un résumé de ce document ?",
+		"bookmarksTitle": "Signets",
+		"summaryTitle": "Résumé IA",
+		"noBookmarks": "Aucun signet. Utilisez ★ dans la barre supérieure pour sauvegarder des pages.",
+		"page": "Page {{page}}",
+		"generating": "Génération du résumé...",
+		"creditsUsed": "{{used}} sur {{max}} disponibles ce mois",
+		"renewsOn": "Renouvellement le {{date}}",
+		"copySummary": "Copier le résumé",
+		"limitTitle": "Limite mensuelle atteinte",
+		"errorTitle": "Une erreur s'est produite",
+		"errorMessage": "Veuillez réessayer plus tard",
+		"searchPlaceholder": "Rechercher dans le document...",
+		"searchPrev": "← Précédent",
+		"searchNext": "Suivant →",
+		"aiOverview": "Aperçu IA",
+		"bookmarks": "Signets",
+		"search": "Recherche"
+	}
+}
