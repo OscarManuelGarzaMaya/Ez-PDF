@@ -111,6 +111,9 @@ const ViewerScreen = () => {
 	const [searchResults, setSearchResults] = useState<SearchResult[]>([])
 	const [currentMatch, setCurrentMatch] = useState(0)
 	const [keyboardHeight, setKeyboardHeight] = useState(0)
+	const [searchPanelHeight, setSearchPanelHeight] = useState(150)
+	const [bookmarksPanelHeight, setBookmarksPanelHeight] = useState(400)
+	const [summaryPanelHeight, setSummaryPanelHeight] = useState(400)
 
 	// — Bookmarks —
 	const [bookmarksOpen, setBookmarksOpen] = useState(false)
@@ -220,6 +223,7 @@ const ViewerScreen = () => {
 	const openBookmarks = () => {
 		if (fabOpen) closeFab()
 		if (summaryOpen) closeSummary()
+		if (searchOpen) closeSearchRef.current()
 		setBookmarksOpen(true)
 		Animated.spring(bookmarksPanelAnim, {
 			toValue: 1,
@@ -502,7 +506,12 @@ const ViewerScreen = () => {
 	}
 
 	const bottomBarHeight = BAR_HEIGHT + (insets.bottom || 12)
-	const fabBottom = (insets.bottom || 0) + BAR_HEIGHT + 16
+	const fabBottom = (() => {
+		if (searchOpen && keyboardHeight === 0) return searchPanelHeight + 10
+		if (bookmarksOpen) return bookmarksPanelHeight + 10
+		if (summaryOpen) return summaryPanelHeight + 10
+		return (insets.bottom || 0) + BAR_HEIGHT + 16
+	})()
 
 	return (
 		<ScreenWrapper>
@@ -642,6 +651,7 @@ const ViewerScreen = () => {
 			{/* Bookmarks Panel */}
 			{bookmarksOpen && (
 				<Animated.View
+					onLayout={(e) => setBookmarksPanelHeight(e.nativeEvent.layout.height)}
 					style={[
 						styles.bottomPanel,
 						{
@@ -714,6 +724,7 @@ const ViewerScreen = () => {
 			{/* Summary Panel */}
 			{summaryOpen && (
 				<Animated.View
+					onLayout={(e) => setSummaryPanelHeight(e.nativeEvent.layout.height)}
 					style={[
 						styles.bottomPanel,
 						styles.summaryPanel,
@@ -748,6 +759,7 @@ const ViewerScreen = () => {
 			{/* Search Panel */}
 			{searchOpen && (
 				<Animated.View
+					onLayout={(e) => setSearchPanelHeight(e.nativeEvent.layout.height)}
 					style={[
 						styles.searchPanel,
 						{
@@ -888,7 +900,7 @@ const styles = StyleSheet.create({
 		position: 'absolute',
 		right: 20,
 		alignItems: 'flex-end',
-		zIndex: 20,
+		zIndex: 35,
 	},
 	fab: {
 		width: FAB_SIZE,
