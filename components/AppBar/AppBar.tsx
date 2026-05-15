@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet } from 'react-native'
+import { useTranslation } from 'react-i18next'
 import { colors } from '../../constants/theme'
 import ThemeMenu from '../ThemeMenu/ThemeMenu'
 
@@ -9,10 +10,11 @@ type Props = {
 
 const AppBar = ({ isDark, pdfCount }: Props) => {
 	const theme = isDark ? colors.dark : colors.light
+	const { t } = useTranslation()
 
 	return (
 		<View style={[styles.container, { backgroundColor: theme.surface }]}>
-			<Text style={[styles.title, { color: theme.text }]}>My PDFs</Text>
+			<Text style={[styles.title, { color: theme.text }]}>{t('appBar.title')}</Text>
 			<View style={styles.badge}>
 				<Text style={styles.badgeText}>{pdfCount}</Text>
 			</View>

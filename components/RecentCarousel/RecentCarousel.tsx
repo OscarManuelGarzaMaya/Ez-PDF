@@ -6,6 +6,7 @@ import {
 	StyleSheet,
 } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
+import { useTranslation } from 'react-i18next'
 import { PDF } from '../../store/pdfStore'
 import { colors, ICON_COLORS } from '../../constants/theme'
 
@@ -17,11 +18,12 @@ type Props = {
 
 const RecentCarousel = ({ isDark, pdfs, onPress}: Props)=>{
     const theme = isDark ? colors.dark : colors.light
+    const { t } = useTranslation()
 
     return (
 					<View style={styles.wrapper}>
 						<Text style={[styles.sectionTitle, { color: theme.text }]}>
-							Recientes
+							{t('recentCarousel.title')}
 						</Text>
 						<View>
 							<ScrollView

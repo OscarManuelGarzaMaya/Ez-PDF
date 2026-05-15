@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { View, Text, TouchableOpacity, Pressable, StyleSheet, Modal } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useTranslation } from 'react-i18next'
 import { colors } from '../../constants/theme'
 import { useThemeStore } from '../../store/themeStore'
 
@@ -14,6 +15,7 @@ const ThemeMenu = ({ isDark, barHeight = 56 }: Props) => {
 	const { toggleTheme } = useThemeStore()
 	const { top } = useSafeAreaInsets()
 	const theme = isDark ? colors.dark : colors.light
+	const { t } = useTranslation()
 
 	return (
 		<>
@@ -43,7 +45,7 @@ const ThemeMenu = ({ isDark, barHeight = 56 }: Props) => {
 							onPress={() => { toggleTheme(); setOpen(false) }}
 						>
 							<Text style={[styles.itemText, { color: theme.text }]}>
-								{isDark ? '☀️  Light mode' : '🌙  Dark mode'}
+								{isDark ? t('themeMenu.lightMode') : t('themeMenu.darkMode')}
 							</Text>
 						</TouchableOpacity>
 					</View>

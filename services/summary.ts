@@ -1,4 +1,5 @@
 import * as FileSystem from 'expo-file-system/legacy'
+import i18n from 'i18next'
 import { supabase } from './supabase'
 
 export type SummaryResult =
@@ -15,7 +16,7 @@ export const generateSummary = async (
 	})
 
 	const { data, error } = await supabase.functions.invoke('generate-summary', {
-		body: { device_id: deviceId, pdf_base64 },
+		body: { device_id: deviceId, pdf_base64, lang: i18n.language },
 	})
 
 	if (error) {

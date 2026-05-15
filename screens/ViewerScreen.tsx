@@ -22,6 +22,7 @@ import Pdf, { searchTextDirect } from 'react-native-pdf-jsi'
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import * as Clipboard from 'expo-clipboard'
+import { useTranslation } from 'react-i18next'
 
 
 // Navigation
@@ -53,10 +54,10 @@ const formatDate = (ts: number) => {
 	return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
-const formatResetDate = (dateStr: string): string => {
+const formatResetDate = (dateStr: string, lang: string): string => {
 	const [year, month, day] = dateStr.split('-').map(Number)
 	const d = new Date(year, month - 1, day)
-	return d.toLocaleDateString('es', { day: 'numeric', month: 'short' })
+	return d.toLocaleDateString(lang, { day: 'numeric', month: 'short' })
 }
 
 type ViewerRouteProp = RouteProp<RootStackParamList, 'Viewer'>
@@ -78,12 +79,6 @@ const ChevronIcon = ({ up }: { up: boolean }) => (
 	</Svg>
 )
 
-const MINI_FABS = [
-	{ label: 'AI Overview', color: colors.accent.teal, icon: '✦' },
-	{ label: 'Marcadores', color: colors.accent.violet, icon: '♡' },
-	{ label: 'Búsqueda', color: colors.accent.blue, icon: '⊙' },
-]
-
 const ViewerScreen = () => {
 	const route = useRoute<ViewerRouteProp>()
 	const navigation = useNavigation()
@@ -92,6 +87,13 @@ const ViewerScreen = () => {
 	const { isDark } = useThemeStore()
 	const { deviceId } = useDeviceStore()
 	const theme = isDark ? colors.dark : colors.light
+	const { t, i18n } = useTranslation()
+
+	const MINI_FABS = [
+		{ label: t('viewer.aiOverview'), color: colors.accent.teal, icon: '✦' },
+		{ label: t('viewer.bookmarks'), color: colors.accent.violet, icon: '♡' },
+		{ label: t('viewer.search'), color: colors.accent.blue, icon: '⊙' },
+	]
 
 	const pdf = pdfs.find((p) => p.id === route.params.pdfId)
 
@@ -262,11 +264,11 @@ const ViewerScreen = () => {
 	const openSummary = () => {
 		if (fabOpen) closeFab()
 		Alert.alert(
-			'Resumen con IA',
-			'¿Deseas generar un resumen de este documento?',
+			t('viewer.summaryAlertTitle'),
+			t('viewer.summaryAlertMessage'),
 			[
-				{ text: 'No', style: 'cancel' },
-				{ text: 'Sí', onPress: handleGenerateSummary },
+				{ text: t('common.no'), style: 'cancel' },
+				{ text: t('common.yes'), onPress: handleGenerateSummary },
 			]
 		)
 	}
@@ -310,7 +312,7 @@ const ViewerScreen = () => {
 				<View style={styles.summaryState}>
 					<ActivityIndicator size="large" color={colors.accent.teal} />
 					<Text style={[styles.summaryStateMessage, { color: theme.textMuted }]}>
-						Generando resumen...
+						{t('viewer.generating')}
 					</Text>
 				</View>
 			)
@@ -332,7 +334,7 @@ const ViewerScreen = () => {
 
 					<View style={styles.creditSection}>
 						<Text style={[styles.creditLabel, { color: theme.textMuted }]}>
-							{summaryResult.used_count} de {MAX_CREDITS} disponibles este mes
+							{t('viewer.creditsUsed', { used: summaryResult.used_count, max: MAX_CREDITS })}
 						</Text>
 						<View style={[styles.progressTrack, { backgroundColor: theme.border }]}>
 							<View
@@ -346,7 +348,7 @@ const ViewerScreen = () => {
 							/>
 						</View>
 						<Text style={[styles.resetDate, { color: theme.textMuted }]}>
-							Se renueva el {formatResetDate(summaryResult.reset_date)}
+							{t('viewer.renewsOn', { date: formatResetDate(summaryResult.reset_date, i18n.language) })}
 						</Text>
 					</View>
 
@@ -354,7 +356,7 @@ const ViewerScreen = () => {
 						style={[styles.copyButton, { backgroundColor: colors.accent.teal }]}
 						onPress={() => Clipboard.setStringAsync((summaryResult as Extract<SummaryResult, { ok: true }>).summary)}
 					>
-						<Text style={styles.copyButtonText}>Copiar resumen</Text>
+						<Text style={styles.copyButtonText}>{t('viewer.copySummary')}</Text>
 					</TouchableOpacity>
 
 					<View style={{ height: 16 }} />
@@ -367,10 +369,10 @@ const ViewerScreen = () => {
 				<View style={styles.summaryState}>
 					<Text style={styles.summaryStateIcon}>📋</Text>
 					<Text style={[styles.summaryStateTitle, { color: theme.text }]}>
-						Límite mensual alcanzado
+						{t('viewer.limitTitle')}
 					</Text>
 					<Text style={[styles.summaryStateMessage, { color: theme.textMuted }]}>
-						Se renueva el {formatResetDate(summaryResult.reset_date)}
+						{t('viewer.renewsOn', { date: formatResetDate(summaryResult.reset_date, i18n.language) })}
 					</Text>
 				</View>
 			)
@@ -380,10 +382,10 @@ const ViewerScreen = () => {
 			<View style={styles.summaryState}>
 				<Text style={styles.summaryStateIcon}>⚠️</Text>
 				<Text style={[styles.summaryStateTitle, { color: theme.text }]}>
-					Ocurrió un error
+					{t('viewer.errorTitle')}
 				</Text>
 				<Text style={[styles.summaryStateMessage, { color: theme.textMuted }]}>
-					Inténtalo de nuevo más tarde
+					{t('viewer.errorMessage')}
 				</Text>
 			</View>
 		)
@@ -563,12 +565,12 @@ const ViewerScreen = () => {
 					style={styles.navButton}
 				>
 					<Text style={[styles.navIcon, { color: currentPage <= 1 ? theme.textMuted : theme.text }]}>
-						‹ Anterior
+						{t('viewer.previous')}
 					</Text>
 				</TouchableOpacity>
 
 				<Text style={[styles.pageIndicator, { color: theme.textMuted }]}>
-					{currentPage} de {totalPages}
+					{t('viewer.pageOf', { current: currentPage, total: totalPages })}
 				</Text>
 
 				<TouchableOpacity
@@ -579,7 +581,7 @@ const ViewerScreen = () => {
 					<Text
 						style={[styles.navIcon, { color: currentPage >= totalPages ? theme.textMuted : theme.text }]}
 					>
-						Siguiente ›
+						{t('viewer.next')}
 					</Text>
 				</TouchableOpacity>
 			</Animated.View>
@@ -648,7 +650,7 @@ const ViewerScreen = () => {
 					<View style={styles.panelHandle} />
 
 					<View style={styles.panelHeader}>
-						<Text style={[styles.panelTitle, { color: theme.text }]}>Marcadores</Text>
+						<Text style={[styles.panelTitle, { color: theme.text }]}>{t('viewer.bookmarksTitle')}</Text>
 						<TouchableOpacity onPress={closeBookmarks} style={styles.panelCloseButton}>
 							<Text style={[styles.panelCloseIcon, { color: theme.textMuted }]}>✕</Text>
 						</TouchableOpacity>
@@ -657,7 +659,7 @@ const ViewerScreen = () => {
 					{pdfBookmarks.length === 0 ? (
 						<View style={styles.bookmarksEmpty}>
 							<Text style={[styles.bookmarksEmptyText, { color: theme.textMuted }]}>
-								No hay marcadores. Usa ★ en la barra superior para guardar páginas.
+								{t('viewer.noBookmarks')}
 							</Text>
 						</View>
 					) : (
@@ -677,7 +679,7 @@ const ViewerScreen = () => {
 								>
 									<View style={styles.bookmarkItemLeft}>
 										<Text style={[styles.bookmarkPage, { color: colors.accent.violet }]}>
-											Pág. {item.page}
+											{t('viewer.page', { page: item.page })}
 										</Text>
 										<Text style={[styles.bookmarkDate, { color: theme.textMuted }]}>
 											{formatDate(item.createdAt)}
@@ -721,7 +723,7 @@ const ViewerScreen = () => {
 					<View style={styles.panelHandle} />
 
 					<View style={styles.panelHeader}>
-						<Text style={[styles.panelTitle, { color: theme.text }]}>Resumen con IA</Text>
+						<Text style={[styles.panelTitle, { color: theme.text }]}>{t('viewer.summaryTitle')}</Text>
 						<TouchableOpacity onPress={closeSummary} style={styles.panelCloseButton}>
 							<Text style={[styles.panelCloseIcon, { color: theme.textMuted }]}>✕</Text>
 						</TouchableOpacity>
@@ -768,7 +770,7 @@ const ViewerScreen = () => {
 									backgroundColor: theme.background,
 								},
 							]}
-							placeholder="Buscar en el documento..."
+							placeholder={t('viewer.searchPlaceholder')}
 							placeholderTextColor={theme.textMuted}
 							value={searchQuery}
 							onChangeText={(text) => {
@@ -792,13 +794,13 @@ const ViewerScreen = () => {
 								onPress={() => goToMatch(currentMatch - 1)}
 								style={styles.searchNavButton}
 							>
-								<Text style={[styles.searchNavText, { color: theme.text }]}>← Anterior</Text>
+								<Text style={[styles.searchNavText, { color: theme.text }]}>{t('viewer.searchPrev')}</Text>
 							</TouchableOpacity>
 							<TouchableOpacity
 								onPress={() => goToMatch(currentMatch + 1)}
 								style={styles.searchNavButton}
 							>
-								<Text style={[styles.searchNavText, { color: theme.text }]}>Siguiente →</Text>
+								<Text style={[styles.searchNavText, { color: theme.text }]}>{t('viewer.searchNext')}</Text>
 							</TouchableOpacity>
 						</View>
 					)}

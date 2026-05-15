@@ -16,15 +16,23 @@ const json = (body: unknown, status = 200) =>
 Deno.serve(async (req: Request) => {
 	if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
 
-	let device_id: string, pdf_base64: string
+	let device_id: string, pdf_base64: string, lang: string
 	try {
-		;({ device_id, pdf_base64 } = await req.json())
+		;({ device_id, pdf_base64, lang } = await req.json())
 	} catch {
 		return json({ error: 'Invalid JSON body' }, 400)
 	}
 
 	if (!device_id?.trim() || !pdf_base64?.trim()) {
 		return json({ error: 'device_id and pdf_base64 are required' }, 400)
+	}
+
+	const SUPPORTED_LANGS = ['es', 'en', 'fr']
+	const summaryLang = SUPPORTED_LANGS.includes(lang) ? lang : 'en'
+	const langInstruction: Record<string, string> = {
+		es: 'Responde completamente en español.',
+		en: 'Respond entirely in English.',
+		fr: 'Réponds entièrement en français.',
 	}
 
 	const supabase = createClient(
@@ -68,7 +76,7 @@ Deno.serve(async (req: Request) => {
 						},
 						{
 							type: 'text',
-							text: 'Summarize this PDF document clearly and concisely. Use bullet points for key topics and findings.',
+							text: `${langInstruction[summaryLang]} Summarize this PDF document clearly and concisely. Use bullet points for key topics and findings.`,
 						},
 					],
 				},
