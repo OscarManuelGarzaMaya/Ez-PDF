@@ -1,4 +1,5 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
+import { useTranslation } from 'react-i18next'
 import { colors } from '../../constants/theme'
 
 type Props = {
@@ -8,6 +9,7 @@ type Props = {
 
 const EmptyState = ({ isDark, onImport }: Props) => {
 	const theme = isDark ? colors.dark : colors.light
+	const { t } = useTranslation()
 
 	return (
 		<View style={styles.container}>
@@ -24,9 +26,9 @@ const EmptyState = ({ isDark, onImport }: Props) => {
 			</View>
 
 			<View style={styles.copy}>
-				<Text style={[styles.title, { color: theme.text }]}>¡Bienvenido a Ez-PDF!</Text>
+				<Text style={[styles.title, { color: theme.text }]}>{t('emptyState.title')}</Text>
 				<Text style={[styles.description, { color: theme.textMuted }]}>
-					Aún no tienes documentos importados.{'\n'}Abre tu primer PDF para empezar.
+					{t('emptyState.description')}
 				</Text>
 			</View>
 
@@ -35,7 +37,7 @@ const EmptyState = ({ isDark, onImport }: Props) => {
 				onPress={onImport}
 				activeOpacity={0.85}
 			>
-				<Text style={styles.buttonText}>Abrir un PDF</Text>
+				<Text style={styles.buttonText}>{t('emptyState.cta')}</Text>
 			</TouchableOpacity>
 		</View>
 	)

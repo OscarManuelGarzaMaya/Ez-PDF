@@ -1,4 +1,5 @@
 import { View, TextInput, StyleSheet } from 'react-native'
+import { useTranslation } from 'react-i18next'
 import { colors } from '../../constants/theme'
 
 type Props = {
@@ -9,6 +10,7 @@ type Props = {
 
 const SearchBar = ({ isDark, value, onChangeText }: Props) => {
 	const theme = isDark ? colors.dark : colors.light
+	const { t } = useTranslation()
 
 	return (
 		<View
@@ -22,7 +24,7 @@ const SearchBar = ({ isDark, value, onChangeText }: Props) => {
 		>
 			<TextInput
 				style={[styles.input, { color: theme.text }]}
-				placeholder="Buscar"
+				placeholder={t('searchBar.placeholder')}
 				placeholderTextColor={theme.text}
 				value={value}
 				onChangeText={onChangeText}

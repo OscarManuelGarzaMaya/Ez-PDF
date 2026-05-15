@@ -1,4 +1,5 @@
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native'
+import { useTranslation } from 'react-i18next'
 import { PDF } from '../../store/pdfStore'
 import { colors, ICON_COLORS } from '../../constants/theme'
 
@@ -20,14 +21,15 @@ const formatDate = (timestamp: number) => {
 const PDFListItem = ({ isDark, pdf, onPress, onDelete }: Props) => {
 	const theme = isDark ? colors.dark : colors.light
 	const iconColor = ICON_COLORS[pdf.colorIndex ?? pdf.id.charCodeAt(0) % ICON_COLORS.length]
+	const { t } = useTranslation()
 
 	const handleLongPress = () => {
 		Alert.alert(
-			'Eliminar PDF',
-			`¿Deseas eliminar "${pdf.name}" de tu biblioteca?`,
+			t('pdfListItem.deleteTitle'),
+			t('pdfListItem.deleteMessage', { name: pdf.name }),
 			[
-				{ text: 'Cancelar', style: 'cancel' },
-				{ text: 'Eliminar', style: 'destructive', onPress: () => onDelete(pdf) },
+				{ text: t('common.cancel'), style: 'cancel' },
+				{ text: t('common.delete'), style: 'destructive', onPress: () => onDelete(pdf) },
 			],
 			{ cancelable: true }
 		)

@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native'
+import { useTranslation } from 'react-i18next'
 // Navigation
 import { useNavigation } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
@@ -30,6 +31,7 @@ const HomeScreen = () => {
 	const navigation = useNavigation<HomeNavProp>()
 	const { pdfs, addPdf, removePdf, _hasHydrated } = usePdfStore()
 	const { removeAllBookmarks } = useBookmarkStore()
+	const { t } = useTranslation()
 	const { isDark } = useThemeStore()
 	const theme = isDark ? colors.dark : colors.light
 
@@ -62,7 +64,7 @@ const HomeScreen = () => {
 	if (!_hasHydrated) {
 		return (
 			<View style={[styles.container, { backgroundColor: theme.background }]}>
-				<Text style={{ color: theme.textMuted, textAlign: 'center', marginTop: 60 }}>Cargando...</Text>
+				<Text style={{ color: theme.textMuted, textAlign: 'center', marginTop: 60 }}>{t('common.loading')}</Text>
 			</View>
 		)
 	}
@@ -95,7 +97,7 @@ const HomeScreen = () => {
 									pdfs={recentPDFs}
 									onPress={handlePdfPress}
 								/>
-								<Text style={[styles.sectionTitle, { color: theme.text }]}>Todos</Text>
+								<Text style={[styles.sectionTitle, { color: theme.text }]}>{t('home.sectionAll')}</Text>
 							</View>
 						) : null
 					}
@@ -107,7 +109,7 @@ const HomeScreen = () => {
 							onDelete={handlePdfDelete}
 						/>
 					)}
-					ListEmptyComponent={<Text style={[styles.emptySearch, { color: theme.textMuted }]}>No se encontraron resultados</Text>}
+					ListEmptyComponent={<Text style={[styles.emptySearch, { color: theme.textMuted }]}>{t('home.noResults')}</Text>}
 				/>
 			)}
 			<TouchableOpacity
