@@ -1,0 +1,59 @@
+{
+	"common": {
+		"cancel": "Cancel",
+		"loading": "Loading...",
+		"no": "No",
+		"yes": "Yes",
+		"delete": "Delete"
+	},
+	"appBar": {
+		"title": "My PDFs"
+	},
+	"searchBar": {
+		"placeholder": "Search"
+	},
+	"home": {
+		"sectionAll": "All",
+		"noResults": "No results found"
+	},
+	"emptyState": {
+		"title": "Welcome to Ez-PDF!",
+		"description": "You haven't imported any documents yet.\nOpen your first PDF to get started.",
+		"cta": "Open a PDF"
+	},
+	"pdfListItem": {
+		"deleteTitle": "Delete PDF",
+		"deleteMessage": "Do you want to delete \"{{name}}\" from your library?"
+	},
+	"recentCarousel": {
+		"title": "Recent"
+	},
+	"themeMenu": {
+		"lightMode": "☀️  Light mode",
+		"darkMode": "🌙  Dark mode"
+	},
+	"viewer": {
+		"previous": "‹ Previous",
+		"next": "Next ›",
+		"pageOf": "{{current}} of {{total}}",
+		"summaryAlertTitle": "AI Summary",
+		"summaryAlertMessage": "Do you want to generate a summary for this document?",
+		"bookmarksTitle": "Bookmarks",
+		"summaryTitle": "AI Summary",
+		"noBookmarks": "No bookmarks yet. Use ★ in the top bar to save pages.",
+		"page": "Page {{page}}",
+		"generating": "Generating summary...",
+		"creditsUsed": "{{used}} of {{max}} available this month",
+		"renewsOn": "Renews on {{date}}",
+		"copySummary": "Copy summary",
+		"limitTitle": "Monthly limit reached",
+		"errorTitle": "Something went wrong",
+		"errorMessage": "Please try again later",
+		"searchPlaceholder": "Search in document...",
+		"searchPrev": "← Previous",
+		"searchNext": "Next →",
+		"aiOverview": "AI Overview",
+		"bookmarks": "Bookmarks",
+		"search": "Search"
+	}
+}
