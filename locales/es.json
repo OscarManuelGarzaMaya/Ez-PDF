@@ -7,7 +7,7 @@
 		"delete": "Eliminar"
 	},
 	"appBar": {
-		"title": "My PDFs"
+		"title": "Mis PDFs"
 	},
 	"searchBar": {
 		"placeholder": "Buscar"
