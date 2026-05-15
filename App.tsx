@@ -1,5 +1,8 @@
+import './i18n'
 import { useEffect, useRef } from 'react'
 import { useColorScheme, Linking } from 'react-native'
+import { useLocales } from 'expo-localization'
+import i18n, { resolveLocale } from './i18n'
 import { StatusBar } from 'expo-status-bar'
 import * as SplashScreen from 'expo-splash-screen'
 import * as FileSystem from 'expo-file-system/legacy'
@@ -39,6 +42,7 @@ export default function App() {
 	const theme = isDark ? colors.dark : colors.light
 	const { deviceId, _hasHydrated } = useDeviceStore()
 	const { pdfs, pruneDeleted } = usePdfStore()
+	const locales = useLocales()
 	const didInitialSync = useRef(false)
 	const pendingUri = useRef<string | null>(null)
 	const pendingPdfId = useRef<string | null>(null)
@@ -78,6 +82,10 @@ export default function App() {
 		pendingUri.current = null
 		handleIncomingPdf(uri)
 	}, [_hasHydrated])
+
+	useEffect(() => {
+		i18n.changeLanguage(resolveLocale(locales[0]?.languageCode))
+	}, [locales])
 
 	useEffect(() => {
 		if (!themeHydrated) return

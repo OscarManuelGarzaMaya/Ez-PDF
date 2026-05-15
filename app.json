@@ -23,7 +23,9 @@
             "CFBundleTypeName": "PDF Document",
             "CFBundleTypeRole": "Viewer",
             "LSHandlerRank": "Alternate",
-            "LSItemContentTypes": ["com.adobe.pdf"]
+            "LSItemContentTypes": [
+              "com.adobe.pdf"
+            ]
           }
         ]
       }
@@ -40,12 +42,26 @@
         {
           "action": "VIEW",
           "data": [
-            { "scheme": "content", "mimeType": "application/pdf" },
-            { "scheme": "file", "mimeType": "application/pdf" },
-            { "scheme": "http", "mimeType": "application/pdf" },
-            { "scheme": "https", "mimeType": "application/pdf" }
+            {
+              "scheme": "content",
+              "mimeType": "application/pdf"
+            },
+            {
+              "scheme": "file",
+              "mimeType": "application/pdf"
+            },
+            {
+              "scheme": "http",
+              "mimeType": "application/pdf"
+            },
+            {
+              "scheme": "https",
+              "mimeType": "application/pdf"
+            }
           ],
-          "category": ["DEFAULT"]
+          "category": [
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -53,7 +69,8 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "react-native-pdf-jsi"
+      "react-native-pdf-jsi",
+      "expo-localization"
     ],
     "extra": {
       "eas": {
