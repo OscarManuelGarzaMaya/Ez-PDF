@@ -10,7 +10,7 @@ const SUPPORTED = ['es', 'en', 'fr'] as const
 export type SupportedLocale = (typeof SUPPORTED)[number]
 
 export const resolveLocale = (code: string | null | undefined): SupportedLocale =>
-	SUPPORTED.includes(code as SupportedLocale) ? (code as SupportedLocale) : 'es'
+	SUPPORTED.includes(code as SupportedLocale) ? (code as SupportedLocale) : 'en'
 
 const deviceLang = resolveLocale(getLocales()[0]?.languageCode)
 
@@ -21,7 +21,7 @@ i18n.use(initReactI18next).init({
 		fr: { translation: fr },
 	},
 	lng: deviceLang,
-	fallbackLng: 'es',
+	fallbackLng: 'en',
 	interpolation: { escapeValue: false },
 })
 
