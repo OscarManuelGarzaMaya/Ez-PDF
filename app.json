@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.EzPDF",
+      "bundleIdentifier": "com.oscarg.ezpdf",
       "infoPlist": {
         "LSSupportsOpeningDocumentsInPlace": true,
         "UIFileSharingEnabled": true,
@@ -37,7 +37,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.EzPDF",
+      "package": "com.oscarg.ezpdf",
       "intentFilters": [
         {
           "action": "VIEW",
