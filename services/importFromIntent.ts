@@ -1,6 +1,9 @@
 import * as FileSystem from 'expo-file-system/legacy'
+import { NativeModules } from 'react-native'
 import { usePdfStore, PDF } from '../store/pdfStore'
 import { ICON_COLORS } from '../constants/theme'
+
+const { ContentResolverInfo } = NativeModules
 
 // Deterministic numeric hash so the same URI always produces the same filename
 const stableNum = (str: string): number => {
@@ -9,6 +12,17 @@ const stableNum = (str: string): number => {
 		h = (Math.imul(31, h) + str.charCodeAt(i)) | 0
 	}
 	return Math.abs(h)
+}
+
+const extractFilenameFromContentResolver = async (uri: string): Promise<string | null> => {
+	if (!uri.startsWith('content://') || !ContentResolverInfo) return null
+	try {
+		const name: string | null = await ContentResolverInfo.getDisplayName(uri)
+		if (!name || name.length < 2 || /^\d+$/.test(name)) return null
+		return name.toLowerCase().endsWith('.pdf') ? name : `${name}.pdf`
+	} catch {
+		return null
+	}
 }
 
 const extractFilename = (uri: string): string => {
@@ -36,7 +50,7 @@ const extractFilename = (uri: string): string => {
 
 export const importFromUri = async (uri: string): Promise<string | null> => {
 	try {
-		const filename = extractFilename(uri)
+		const filename = (await extractFilenameFromContentResolver(uri)) ?? extractFilename(uri)
 		const destination = `${FileSystem.documentDirectory}${filename}`
 
 		await FileSystem.copyAsync({ from: uri, to: destination })
