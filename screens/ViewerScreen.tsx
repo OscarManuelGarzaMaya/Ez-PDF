@@ -71,6 +71,8 @@ const PDF_ID = 'ez-pdf-viewer'
 const MAX_CREDITS = 5
 
 const CHEVRON_PATH = 'm9.71 17.71 5.7-5.71-5.7-5.71-1.42 1.42 4.3 4.29-4.3 4.29z'
+const BOOKMARK_FILLED = 'M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z'
+const BOOKMARK_OUTLINE = 'M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2zm0 15-5-2.18L7 18V5h10v13z'
 
 const ChevronIcon = ({ up }: { up: boolean }) => (
 	<Svg width={24} height={24} viewBox="0 0 24 24">
@@ -79,6 +81,13 @@ const ChevronIcon = ({ up }: { up: boolean }) => (
 		</G>
 	</Svg>
 )
+
+const BookmarkIcon = ({ filled, color }: { filled: boolean; color: string }) => (
+	<Svg width={22} height={22} viewBox="0 0 24 24">
+		<Path d={filled ? BOOKMARK_FILLED : BOOKMARK_OUTLINE} fill={color} />
+	</Svg>
+)
+
 
 const ViewerScreen = () => {
 	const route = useRoute<ViewerRouteProp>()
@@ -91,9 +100,9 @@ const ViewerScreen = () => {
 	const { t, i18n } = useTranslation()
 
 	const MINI_FABS = [
-		{ label: t('viewer.aiOverview'), color: colors.accent.teal, icon: '✦' },
-		{ label: t('viewer.bookmarks'), color: colors.accent.violet, icon: '♡' },
-		{ label: t('viewer.search'), color: colors.accent.blue, icon: '⊙' },
+		{ label: t('viewer.aiOverview'), color: colors.accent.teal, renderIcon: () => <Text style={styles.miniFabIcon}>✦</Text> },
+		{ label: t('viewer.bookmarks'), color: colors.accent.violet, renderIcon: () => <BookmarkIcon filled={false} color="#fff" /> },
+		{ label: t('viewer.search'), color: colors.accent.blue, renderIcon: () => <Text style={styles.miniFabIcon}>⊙</Text> },
 	]
 
 	const pdf = pdfs.find((p) => p.id === route.params.pdfId)
@@ -536,9 +545,10 @@ const ViewerScreen = () => {
 				</Text>
 
 				<TouchableOpacity onPress={toggleCurrentPageBookmark} style={styles.barButton}>
-					<Text style={[styles.bookmarkIcon, { color: currentPageIsBookmarked ? colors.accent.violet : theme.textMuted }]}>
-						{currentPageIsBookmarked ? '★' : '☆'}
-					</Text>
+					<BookmarkIcon
+						filled={currentPageIsBookmarked}
+						color={currentPageIsBookmarked ? colors.accent.violet : theme.textMuted}
+					/>
 				</TouchableOpacity>
 
 				<Text style={[styles.pageCount, { color: theme.textMuted }]}>
@@ -618,7 +628,7 @@ const ViewerScreen = () => {
 			{/* FAB */}
 			<View style={[styles.fabContainer, { bottom: fabBottom }]}>
 				<View pointerEvents={fabOpen ? 'auto' : 'none'}>
-					{MINI_FABS.map(({ label, color, icon }, i) => {
+					{MINI_FABS.map(({ label, color, renderIcon }, i) => {
 						const anim = miniFabAnims[i]
 						return (
 							<Animated.View
@@ -635,7 +645,7 @@ const ViewerScreen = () => {
 										<Text style={[styles.miniFabLabelText, { color: theme.text }]}>{label}</Text>
 									</View>
 									<View style={[styles.miniFab, { backgroundColor: color }]}>
-										<Text style={styles.miniFabIcon}>{icon}</Text>
+										{renderIcon()}
 									</View>
 								</TouchableOpacity>
 							</Animated.View>
