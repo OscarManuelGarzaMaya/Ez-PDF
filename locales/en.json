@@ -40,7 +40,7 @@
 		"summaryAlertMessage": "Do you want to generate a summary for this document?",
 		"bookmarksTitle": "Bookmarks",
 		"summaryTitle": "AI Summary",
-		"noBookmarks": "No bookmarks yet. Use ★ in the top bar to save pages.",
+		"noBookmarks": "No bookmarks yet. Use the bookmark icon in the top bar to save pages.",
 		"page": "Page {{page}}",
 		"generating": "Generating summary...",
 		"creditsUsed": "{{used}} of {{max}} available this month",

@@ -40,7 +40,7 @@
 		"summaryAlertMessage": "¿Deseas generar un resumen de este documento?",
 		"bookmarksTitle": "Marcadores",
 		"summaryTitle": "Resumen con IA",
-		"noBookmarks": "No hay marcadores. Usa ★ en la barra superior para guardar páginas.",
+		"noBookmarks": "No hay marcadores. Usa el ícono de marcador en la barra superior para guardar páginas.",
 		"page": "Pág. {{page}}",
 		"generating": "Generando resumen...",
 		"creditsUsed": "{{used}} de {{max}} disponibles este mes",
