@@ -40,7 +40,7 @@
 		"summaryAlertMessage": "Voulez-vous générer un résumé de ce document ?",
 		"bookmarksTitle": "Signets",
 		"summaryTitle": "Résumé IA",
-		"noBookmarks": "Aucun signet. Utilisez ★ dans la barre supérieure pour sauvegarder des pages.",
+		"noBookmarks": "Aucun signet. Utilisez l'icône de signet dans la barre supérieure pour sauvegarder des pages.",
 		"page": "Page {{page}}",
 		"generating": "Génération du résumé...",
 		"creditsUsed": "{{used}} sur {{max}} disponibles ce mois",
