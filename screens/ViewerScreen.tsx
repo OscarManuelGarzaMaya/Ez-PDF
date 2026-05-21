@@ -45,6 +45,8 @@ import ThemeMenu from '../components/ThemeMenu/ThemeMenu'
 
 // Services
 import { generateSummary } from '../services/summary'
+import ViewerTourModal from '../components/Onboarding/ViewerTourModal'
+import { useOnboardingStore } from '../store/onboardingStore'
 import type { SummaryResult } from '../services/summary'
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window')
@@ -89,6 +91,7 @@ const BookmarkIcon = ({ filled, color }: { filled: boolean; color: string }) => 
 )
 
 
+
 const ViewerScreen = () => {
 	const route = useRoute<ViewerRouteProp>()
 	const navigation = useNavigation()
@@ -98,6 +101,7 @@ const ViewerScreen = () => {
 	const { deviceId } = useDeviceStore()
 	const theme = isDark ? colors.dark : colors.light
 	const { t, i18n } = useTranslation()
+	const { hasSeenViewerTour, _hasHydrated: onboardingHydrated } = useOnboardingStore()
 
 	const MINI_FABS = [
 		{ label: t('viewer.aiOverview'), color: colors.accent.teal, renderIcon: () => <Text style={styles.miniFabIcon}>✦</Text> },
@@ -226,6 +230,10 @@ const ViewerScreen = () => {
 			hide.remove()
 		}
 	}, [])
+
+	useEffect(() => {
+		if (onboardingHydrated && !hasSeenViewerTour && totalPages > 0) showBars()
+	}, [onboardingHydrated, hasSeenViewerTour, totalPages])
 
 	if (!pdf) return null
 
@@ -523,6 +531,8 @@ const ViewerScreen = () => {
 		if (summaryOpen) return summaryPanelHeight + 10
 		return (insets.bottom || 0) + BAR_HEIGHT + 16
 	})()
+
+	const tourVisible = onboardingHydrated && !hasSeenViewerTour && totalPages > 0
 
 	return (
 		<ScreenWrapper>
@@ -845,6 +855,7 @@ const ViewerScreen = () => {
 					)}
 				</Animated.View>
 			)}
+			<ViewerTourModal visible={tourVisible} />
 		</ScreenWrapper>
 	)
 }
