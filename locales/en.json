@@ -32,6 +32,14 @@
 		"lightMode": "☀️  Light mode",
 		"darkMode": "🌙  Dark mode"
 	},
+	"onboarding": {
+		"skip": "Skip",
+		"next": "Next",
+		"gotIt": "Got it",
+		"homeStep1": "Tap here to import a PDF from your device or receive one from another app.",
+		"viewerStep1": "Tap to bookmark this page and save it for quick access later.",
+		"viewerStep2": "Open this menu to access AI summary, your bookmarks, and in-document search."
+	},
 	"viewer": {
 		"previous": "‹ Previous",
 		"next": "Next ›",

@@ -32,6 +32,14 @@
 		"lightMode": "☀️  Mode clair",
 		"darkMode": "🌙  Mode sombre"
 	},
+	"onboarding": {
+		"skip": "Passer",
+		"next": "Suivant",
+		"gotIt": "Compris",
+		"homeStep1": "Appuyez ici pour importer un PDF depuis votre appareil ou en recevoir un depuis une autre application.",
+		"viewerStep1": "Appuyez pour ajouter cette page à vos signets et y accéder rapidement.",
+		"viewerStep2": "Ouvrez ce menu pour accéder au résumé IA, vos signets et la recherche dans le document."
+	},
 	"viewer": {
 		"previous": "‹ Précédent",
 		"next": "Suivant ›",
