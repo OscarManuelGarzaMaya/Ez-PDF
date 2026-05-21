@@ -32,6 +32,14 @@
 		"lightMode": "☀️  Modo claro",
 		"darkMode": "🌙  Modo oscuro"
 	},
+	"onboarding": {
+		"skip": "Omitir",
+		"next": "Siguiente",
+		"gotIt": "Entendido",
+		"homeStep1": "Toca aquí para importar un PDF desde tu dispositivo o recibirlo desde otra app.",
+		"viewerStep1": "Toca para agregar esta página a tus marcadores y acceder a ella fácilmente.",
+		"viewerStep2": "Abre este menú para acceder al resumen con IA, tus marcadores y la búsqueda en el documento."
+	},
 	"viewer": {
 		"previous": "‹ Anterior",
 		"next": "Siguiente ›",
