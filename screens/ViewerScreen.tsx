@@ -428,7 +428,9 @@ const ViewerScreen = () => {
 				const results = await searchTextDirect(PDF_ID, query, 1, totalPages)
 				setSearchResults(results as SearchResult[])
 				setCurrentMatch(0)
-				if (results.length > 0) pdfRef.current?.setPage(results[0].page)
+				if (results.length > 0) {
+					pdfRef.current?.setPage(results[0].page)
+				}
 			} catch {
 				setSearchResults([])
 			}
@@ -565,6 +567,9 @@ const ViewerScreen = () => {
 				source={{ uri: pdf.uri }}
 				style={styles.pdf}
 				fitPolicy={0}
+				scale={1}
+				minScale={0.5}
+				maxScale={5}
 				spacing={8}
 				enableAntialiasing
 				enableDoubleTapZoom
