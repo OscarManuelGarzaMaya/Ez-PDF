@@ -1,6 +1,8 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native'
 import { useTranslation } from 'react-i18next'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { TourGuideProvider, TourGuideZone, useTourGuideController } from 'rn-tourguide'
 // Navigation
 import { useNavigation } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
@@ -13,6 +15,7 @@ import { colors } from '../constants/theme'
 // Stores
 import { usePdfStore, PDF } from '../store/pdfStore'
 import { useBookmarkStore } from '../store/bookmarkStore'
+import { useOnboardingStore } from '../store/onboardingStore'
 
 // Services
 import { pickPDF } from '../services/filePicker'
@@ -24,16 +27,38 @@ import SearchBar from '../components/SearchBar/SearchBar'
 import RecentCarousel from '../components/RecentCarousel/RecentCarousel'
 import PDFListItem from '../components/PDFListItem/PDFListItem'
 import EmptyState from '../components/EmptyState/EmptyState'
+import TourTooltip from '../components/Onboarding/TourTooltip'
 
 type HomeNavProp = NativeStackNavigationProp<RootStackParamList, 'Home'>
+
+type TourControllerProps = { hydrated: boolean; hasSeen: boolean; markSeen: () => void; resetOnboarding: () => void }
+const HomeTourController = ({ hydrated, hasSeen, markSeen, resetOnboarding }: TourControllerProps) => {
+	const { start, canStart, eventEmitter } = useTourGuideController()
+	useEffect(() => {
+		resetOnboarding()
+	}, [])
+	useEffect(() => {
+		if (!canStart || !hydrated || hasSeen) return
+		const t = setTimeout(() => start(), 600)
+		return () => clearTimeout(t)
+	}, [canStart, hydrated, hasSeen])
+	useEffect(() => {
+		if (!eventEmitter) return
+		eventEmitter.on('stop', markSeen)
+		return () => eventEmitter.off('stop', markSeen)
+	}, [eventEmitter])
+	return null
+}
 
 const HomeScreen = () => {
 	const navigation = useNavigation<HomeNavProp>()
 	const { pdfs, addPdf, removePdf, _hasHydrated } = usePdfStore()
 	const { removeAllBookmarks } = useBookmarkStore()
+	const { hasSeen, markSeen, resetOnboarding, _hasHydrated: onboardingHydrated } = useOnboardingStore()
 	const { t } = useTranslation()
 	const { isDark } = useThemeStore()
 	const theme = isDark ? colors.dark : colors.light
+	const insets = useSafeAreaInsets()
 
 	const [searchQuery, setSearchQuery] = useState('')
 
@@ -70,6 +95,15 @@ const HomeScreen = () => {
 	}
 
 	return (
+		<TourGuideProvider
+			tooltipComponent={TourTooltip}
+			backdropColor="rgba(0,0,0,0.72)"
+			borderRadius={12}
+			androidStatusBarVisible
+			preventOutsideInteraction
+			labels={{ skip: t('onboarding.skip'), next: t('onboarding.next'), finish: t('onboarding.gotIt') }}
+		>
+			<HomeTourController hydrated={onboardingHydrated} hasSeen={hasSeen} markSeen={markSeen} resetOnboarding={resetOnboarding} />
 		<ScreenWrapper>
 			<AppBar
 				isDark={isDark}
@@ -112,14 +146,13 @@ const HomeScreen = () => {
 					ListEmptyComponent={<Text style={[styles.emptySearch, { color: theme.textMuted }]}>{t('home.noResults')}</Text>}
 				/>
 			)}
-			<TouchableOpacity
-				style={styles.fab}
-				onPress={handleFABPress}
-			>
-				<Text style={styles.fabIcon}>+</Text>
-			</TouchableOpacity>
-
+			<TourGuideZone zone={1} text={t('onboarding.homeStep1')} shape="circle" tooltipBottomOffset={insets.bottom + 84}>
+				<TouchableOpacity style={styles.fab} onPress={handleFABPress}>
+					<Text style={styles.fabIcon}>+</Text>
+				</TouchableOpacity>
+			</TourGuideZone>
 		</ScreenWrapper>
+		</TourGuideProvider>
 	)
 }
 
