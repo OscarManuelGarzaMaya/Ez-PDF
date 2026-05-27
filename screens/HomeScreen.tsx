@@ -33,10 +33,7 @@ const HomeScreen = () => {
 	const navigation = useNavigation<HomeNavProp>()
 	const { pdfs, addPdf, removePdf, _hasHydrated } = usePdfStore()
 	const { removeAllBookmarks } = useBookmarkStore()
-	const { hasSeen, markSeen, resetOnboarding, _hasHydrated: onboardingHydrated } = useOnboardingStore()
-
-	// TODO: remove before release
-	useEffect(() => { resetOnboarding() }, [])
+	const { hasSeen, markSeen, _hasHydrated: onboardingHydrated } = useOnboardingStore()
 	const { t } = useTranslation()
 	const { isDark } = useThemeStore()
 	const theme = isDark ? colors.dark : colors.light
