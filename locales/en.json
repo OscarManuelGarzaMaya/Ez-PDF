@@ -37,6 +37,7 @@
 		"next": "Next",
 		"gotIt": "Got it",
 		"homeStep1": "Tap here to import a PDF from your device or receive one from another app.",
+		"homeStep2": "To remove a file, swipe left on any item in the list or tap the ✕ on a recent card.",
 		"viewerStep1": "Tap to bookmark this page and save it for quick access later.",
 		"viewerStep2": "Open this menu to access AI summary, your bookmarks, and in-document search."
 	},
