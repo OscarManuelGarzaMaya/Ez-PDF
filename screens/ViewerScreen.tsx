@@ -528,7 +528,6 @@ const ViewerScreen = () => {
 	const fabBottom = (() => {
 		if (searchOpen && keyboardHeight === 0) return searchPanelHeight + 10
 		if (bookmarksOpen) return bookmarksPanelHeight + 10
-		if (summaryOpen) return summaryPanelHeight + 10
 		return (insets.bottom || 0) + BAR_HEIGHT + 16
 	})()
 
@@ -641,7 +640,7 @@ const ViewerScreen = () => {
 			</Animated.View>
 
 			{/* FAB */}
-			<View style={[styles.fabContainer, { bottom: fabBottom }]}>
+			<View style={[styles.fabContainer, { bottom: fabBottom, opacity: summaryOpen ? 0 : 1 }]} pointerEvents={summaryOpen ? 'none' : 'auto'}>
 				<View pointerEvents={fabOpen ? 'auto' : 'none'}>
 					{MINI_FABS.map(({ label, color, renderIcon }, i) => {
 						const anim = miniFabAnims[i]
@@ -737,7 +736,9 @@ const ViewerScreen = () => {
 										style={styles.bookmarkDeleteButton}
 										hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
 									>
-										<Text style={[styles.bookmarkDeleteIcon, { color: colors.accent.red }]}>✕</Text>
+										<Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+											<Path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke={colors.accent.red} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+										</Svg>
 									</TouchableOpacity>
 								</TouchableOpacity>
 							)}
@@ -1060,9 +1061,6 @@ const styles = StyleSheet.create({
 		height: 32,
 		alignItems: 'center',
 		justifyContent: 'center',
-	},
-	bookmarkDeleteIcon: {
-		fontSize: 14,
 	},
 	bookmarkIcon: {
 		fontSize: 20,
