@@ -1,4 +1,5 @@
-import { Modal, View, Text, TouchableOpacity, StyleSheet } from 'react-native'
+import { useState, useEffect } from 'react'
+import { Modal, View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native'
 import { useTranslation } from 'react-i18next'
 
 import { useThemeStore } from '../../store/themeStore'
@@ -7,6 +8,7 @@ import { colors } from '../../constants/theme'
 const FAB_BOTTOM = 64
 const FAB_SIZE = 56
 const CARD_WIDTH = 240
+const { height: SCREEN_HEIGHT } = Dimensions.get('window')
 
 type Props = { visible: boolean; onDismiss: () => void }
 
@@ -14,26 +16,61 @@ const HomeTourModal = ({ visible, onDismiss }: Props) => {
 	const { isDark } = useThemeStore()
 	const theme = isDark ? colors.dark : colors.light
 	const { t } = useTranslation()
+	const [step, setStep] = useState(0)
+
+	useEffect(() => {
+		if (visible) setStep(0)
+	}, [visible])
 
 	if (!visible) return null
+
+	const isLast = step === 1
+
+	const handleNext = () => {
+		if (isLast) onDismiss()
+		else setStep(1)
+	}
+
+	// Step 0: card above FAB, arrow pointing down
+	// Step 1: card in upper-center area, no arrow
+	const cardPosition =
+		step === 0
+			? { bottom: FAB_BOTTOM + FAB_SIZE + 16, right: 12 }
+			: { top: SCREEN_HEIGHT * 0.25, alignSelf: 'center' as const }
 
 	return (
 		<Modal visible transparent animationType="fade" statusBarTranslucent>
 			<View style={styles.overlay}>
-				<View style={[styles.card, { backgroundColor: theme.surface, bottom: FAB_BOTTOM + FAB_SIZE + 16, right: 12 }]}>
+				<View style={[styles.card, { backgroundColor: theme.surface }, cardPosition]}>
 					<Text style={[styles.text, { color: theme.text }]}>
-						{t('onboarding.homeStep1')}
+						{t(step === 0 ? 'onboarding.homeStep1' : 'onboarding.homeStep2')}
 					</Text>
+
 					<View style={styles.actions}>
+						{!isLast && (
+							<TouchableOpacity
+								onPress={onDismiss}
+								hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+							>
+								<Text style={[styles.skip, { color: theme.textMuted }]}>
+									{t('onboarding.skip')}
+								</Text>
+							</TouchableOpacity>
+						)}
 						<TouchableOpacity
-							onPress={onDismiss}
+							onPress={handleNext}
 							style={[styles.nextBtn, { backgroundColor: colors.accent.teal }]}
 							activeOpacity={0.85}
 						>
-							<Text style={styles.nextText}>{t('onboarding.gotIt')}</Text>
+							<Text style={styles.nextText}>
+								{isLast ? t('onboarding.gotIt') : t('onboarding.next')}
+							</Text>
 						</TouchableOpacity>
 					</View>
-					<View style={[styles.arrowDown, { borderTopColor: theme.surface }]} />
+
+					{step === 0 && (
+						<View style={[styles.arrowDown, { borderTopColor: theme.surface }]} />
+					)}
 				</View>
 			</View>
 		</Modal>
@@ -77,6 +114,11 @@ const styles = StyleSheet.create({
 		flexDirection: 'row',
 		alignItems: 'center',
 		justifyContent: 'flex-end',
+		gap: 12,
+	},
+	skip: {
+		fontSize: 13,
+		fontWeight: '500',
 	},
 	nextBtn: {
 		paddingVertical: 8,
