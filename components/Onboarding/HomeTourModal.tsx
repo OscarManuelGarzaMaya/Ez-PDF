@@ -10,7 +10,14 @@ const FAB_BOTTOM = 64
 const FAB_SIZE = 56
 const CARD_WIDTH = 240
 const DELETE_WIDTH = 80
-const { height: SCREEN_HEIGHT } = Dimensions.get('window')
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window')
+
+const FAB_CX = SCREEN_WIDTH - 24 - FAB_SIZE / 2
+const FAB_CY = SCREEN_HEIGHT - FAB_BOTTOM - FAB_SIZE / 2
+
+const spotlightPath = (cx: number, cy: number, r: number) =>
+	`M0,0 H${SCREEN_WIDTH} V${SCREEN_HEIGHT} H0 Z ` +
+	`M${cx + r},${cy} A${r},${r} 0 1,0 ${cx - r},${cy} A${r},${r} 0 1,0 ${cx + r},${cy} Z`
 
 // Card sits at 12% from top in step 2, ~130px tall → ghost area starts below
 const GHOST_TOP = SCREEN_HEIGHT * 0.12 + 148
@@ -43,7 +50,28 @@ const HomeTourModal = ({ visible, onDismiss }: Props) => {
 
 	return (
 		<Modal visible transparent animationType="fade" statusBarTranslucent>
-			<View style={styles.overlay}>
+			<View style={styles.container}>
+
+				{/* Step 0: SVG spotlight on FAB */}
+				{step === 0 && (
+					<Svg
+						width={SCREEN_WIDTH}
+						height={SCREEN_HEIGHT}
+						style={StyleSheet.absoluteFill}
+						pointerEvents="none"
+					>
+						<Path
+							d={spotlightPath(FAB_CX, FAB_CY, 36)}
+							fill="rgba(0,0,0,0.72)"
+							fillRule="evenodd"
+						/>
+					</Svg>
+				)}
+
+				{/* Step 1: flat dark overlay */}
+				{step === 1 && (
+					<View style={[StyleSheet.absoluteFill, styles.overlay]} pointerEvents="none" />
+				)}
 
 				{/* Step 2 — ghost placeholder items */}
 				{step === 1 && (
@@ -118,8 +146,10 @@ const HomeTourModal = ({ visible, onDismiss }: Props) => {
 }
 
 const styles = StyleSheet.create({
-	overlay: {
+	container: {
 		flex: 1,
+	},
+	overlay: {
 		backgroundColor: 'rgba(0,0,0,0.72)',
 	},
 	card: {
