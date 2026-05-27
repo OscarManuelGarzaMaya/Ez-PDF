@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import { Modal, View, Text, TouchableOpacity, StyleSheet } from 'react-native'
+import { Modal, View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useTranslation } from 'react-i18next'
+import Svg, { Path } from 'react-native-svg'
 
 import { useThemeStore } from '../../store/themeStore'
 import { useOnboardingStore } from '../../store/onboardingStore'
@@ -9,6 +10,14 @@ import { colors } from '../../constants/theme'
 
 const BAR_HEIGHT = 56
 const FAB_SIZE = 56
+const CARD_WIDTH = 240
+const BOOKMARK_OUTLINE = 'M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2zm0 15-5-2.18L7 18V5h10v13z'
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window')
+
+// SVG overlay: full-screen rect with a circular hole at (cx, cy) radius r
+const spotlightPath = (cx: number, cy: number, r: number) =>
+	`M0,0 H${SCREEN_WIDTH} V${SCREEN_HEIGHT} H0 Z ` +
+	`M${cx + r},${cy} A${r},${r} 0 1,0 ${cx - r},${cy} A${r},${r} 0 1,0 ${cx + r},${cy} Z`
 
 type Props = { visible: boolean }
 
@@ -33,24 +42,69 @@ const ViewerTourModal = ({ visible }: Props) => {
 		else setStep(1)
 	}
 
-	// Step 0: below the top bar (bookmark button area)
-	// Step 1: above the FAB (teal action button)
-	const cardPosition =
-		step === 0
-			? { top: insets.top + BAR_HEIGHT + 12, right: 12 }
-			: { bottom: insets.bottom + BAR_HEIGHT + FAB_SIZE + 20, right: 12 }
+	// FAB: right: 20, size: 56 → center X = SCREEN_WIDTH - 48 (device-independent)
+	const fabCx = SCREEN_WIDTH - 48
+	const fabCy = SCREEN_HEIGHT - (insets.bottom + BAR_HEIGHT + 16) - FAB_SIZE / 2
+
+	const cardPosition = step === 0
+		? { top: insets.top + BAR_HEIGHT + 12, right: 12 }
+		: { bottom: insets.bottom + BAR_HEIGHT + FAB_SIZE + 20, right: 12 }
 
 	return (
-		<Modal visible transparent animationType="fade" statusBarTranslucent>
-			<View style={styles.overlay}>
-				<View style={[styles.card, { backgroundColor: theme.surface }, cardPosition]}>
-					{step === 0 && (
-						<View style={[styles.arrowUp, { borderBottomColor: theme.surface }]} />
-					)}
+		<Modal
+			visible
+			transparent
+			animationType="fade"
+			statusBarTranslucent
+		>
+			<View style={styles.container}>
+				{/* Step 0: plain dark overlay */}
+				{step === 0 && (
+					<View
+						style={[StyleSheet.absoluteFill, styles.overlay]}
+						pointerEvents="none"
+					/>
+				)}
 
-					<Text style={[styles.text, { color: theme.text }]}>
-						{t(step === 0 ? 'onboarding.viewerStep1' : 'onboarding.viewerStep2')}
-					</Text>
+				{/* Step 1: SVG spotlight on the FAB (position is device-independent) */}
+				{step === 1 && (
+					<Svg
+						width={SCREEN_WIDTH}
+						height={SCREEN_HEIGHT}
+						style={StyleSheet.absoluteFill}
+						pointerEvents="none"
+					>
+						<Path
+							d={spotlightPath(fabCx, fabCy, 36)}
+							fill="rgba(0,0,0,0.72)"
+							fillRule="evenodd"
+						/>
+					</Svg>
+				)}
+
+				{/* Tooltip card */}
+				<View style={[styles.card, { backgroundColor: theme.surface }, cardPosition]}>
+					{step === 0 && <View style={[styles.arrowUp, { borderBottomColor: theme.surface }]} />}
+
+					{step === 0 ? (
+						<Text style={[styles.text, { color: theme.text, textAlign: 'auto' }]}>
+							{t('onboarding.viewerStep1Tap')}{' '}
+							<Svg
+								width={20}
+								height={20}
+								viewBox="0 0 24 24"
+								style={{ transform: [{ translateY: 3 }] }}
+							>
+								<Path
+									d={BOOKMARK_OUTLINE}
+									fill={colors.accent.violet}
+								/>
+							</Svg>{' '}
+							{t('onboarding.viewerStep1')}
+						</Text>
+					) : (
+						<Text style={[styles.text, { color: theme.text }]}>{t('onboarding.viewerStep2')}</Text>
+					)}
 
 					<View style={styles.actions}>
 						{!isLast && (
@@ -58,9 +112,7 @@ const ViewerTourModal = ({ visible }: Props) => {
 								onPress={markViewerSeen}
 								hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
 							>
-								<Text style={[styles.skip, { color: theme.textMuted }]}>
-									{t('onboarding.skip')}
-								</Text>
+								<Text style={[styles.skip, { color: theme.textMuted }]}>{t('onboarding.skip')}</Text>
 							</TouchableOpacity>
 						)}
 						<TouchableOpacity
@@ -68,27 +120,38 @@ const ViewerTourModal = ({ visible }: Props) => {
 							style={[styles.nextBtn, { backgroundColor: colors.accent.teal }]}
 							activeOpacity={0.85}
 						>
-							<Text style={styles.nextText}>
-								{isLast ? t('onboarding.gotIt') : t('onboarding.next')}
-							</Text>
+							<Text style={styles.nextText}>{isLast ? t('onboarding.gotIt') : t('onboarding.next')}</Text>
 						</TouchableOpacity>
 					</View>
 
-					{step === 1 && (
-						<View style={[styles.arrowDown, { borderTopColor: theme.surface }]} />
-					)}
+					{step === 1 && <View style={[styles.arrowDown, { borderTopColor: theme.surface }]} />}
 				</View>
 			</View>
 		</Modal>
 	)
 }
 
-const CARD_WIDTH = 240
-
 const styles = StyleSheet.create({
-	overlay: {
+	container: {
 		flex: 1,
-		backgroundColor: 'rgba(0,0,0,0.65)',
+	},
+	overlay: {
+		backgroundColor: 'rgba(0,0,0,0.72)',
+	},
+	inlineText: {
+		flexDirection: 'row',
+		flexWrap: 'wrap',
+		display: 'flex',
+		alignItems: 'center',
+		marginBottom: 14,
+		justifyContent: 'center',
+	},
+	inlineIcon: {
+		marginTop: 1,
+		flexWrap: 'wrap',
+	},
+	inlineSegment: {
+		marginBottom: 0,
 	},
 	card: {
 		position: 'absolute',
