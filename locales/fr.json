@@ -37,6 +37,7 @@
 		"next": "Suivant",
 		"gotIt": "Compris",
 		"homeStep1": "Appuyez ici pour importer un PDF depuis votre appareil ou en recevoir un depuis une autre application.",
+		"homeStep2": "Pour supprimer un fichier, glissez vers la gauche dans la liste ou appuyez sur ✕ sur une carte récente.",
 		"viewerStep1": "Appuyez pour ajouter cette page à vos signets et y accéder rapidement.",
 		"viewerStep2": "Ouvrez ce menu pour accéder au résumé IA, vos signets et la recherche dans le document."
 	},

@@ -33,7 +33,10 @@ const HomeScreen = () => {
 	const navigation = useNavigation<HomeNavProp>()
 	const { pdfs, addPdf, removePdf, _hasHydrated } = usePdfStore()
 	const { removeAllBookmarks } = useBookmarkStore()
-	const { hasSeen, markSeen, _hasHydrated: onboardingHydrated } = useOnboardingStore()
+	const { hasSeen, markSeen, resetOnboarding, _hasHydrated: onboardingHydrated } = useOnboardingStore()
+
+	// TODO: remove before release
+	useEffect(() => { resetOnboarding() }, [])
 	const { t } = useTranslation()
 	const { isDark } = useThemeStore()
 	const theme = isDark ? colors.dark : colors.light
@@ -112,6 +115,7 @@ const HomeScreen = () => {
 										isDark={isDark}
 										pdfs={recentPDFs}
 										onPress={handlePdfPress}
+										onDelete={handlePdfDelete}
 									/>
 									<Text style={[styles.sectionTitle, { color: theme.text }]}>{t('home.sectionAll')}</Text>
 								</View>
