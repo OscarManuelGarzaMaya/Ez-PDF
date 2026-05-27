@@ -4,6 +4,7 @@ import {
 	ScrollView,
 	TouchableOpacity,
 	StyleSheet,
+	Alert,
 } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useTranslation } from 'react-i18next'
@@ -14,11 +15,24 @@ type Props = {
 	isDark: boolean
 	pdfs: PDF[]
 	onPress: (pdf: PDF) => void
+	onDelete: (pdf: PDF) => void
 }
 
-const RecentCarousel = ({ isDark, pdfs, onPress}: Props)=>{
+const RecentCarousel = ({ isDark, pdfs, onPress, onDelete }: Props) => {
     const theme = isDark ? colors.dark : colors.light
     const { t } = useTranslation()
+
+    const confirmDelete = (pdf: PDF) => {
+        Alert.alert(
+            t('pdfListItem.deleteTitle'),
+            t('pdfListItem.deleteMessage', { name: pdf.name }),
+            [
+                { text: t('common.cancel'), style: 'cancel' },
+                { text: t('common.delete'), style: 'destructive', onPress: () => onDelete(pdf) },
+            ],
+            { cancelable: true }
+        )
+    }
 
     return (
 					<View style={styles.wrapper}>
@@ -36,7 +50,16 @@ const RecentCarousel = ({ isDark, pdfs, onPress}: Props)=>{
 										key={pdf.id}
 										style={[styles.card, { backgroundColor: theme.surface }]}
 										onPress={() => onPress(pdf)}
+										onLongPress={() => confirmDelete(pdf)}
+										delayLongPress={500}
 									>
+										<TouchableOpacity
+											style={styles.deleteBtn}
+											onPress={() => confirmDelete(pdf)}
+											hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+										>
+											<Text style={styles.deleteBtnText}>✕</Text>
+										</TouchableOpacity>
 										<View style={[styles.cardIcon, { backgroundColor: ICON_COLORS[pdf.colorIndex ?? pdf.id.charCodeAt(0) % ICON_COLORS.length] }]}>
 											<Text style={styles.cardIconText}>PDF</Text>
 										</View>
@@ -86,7 +109,23 @@ const styles = StyleSheet.create({
 		width: 140,
 		borderRadius: 16,
 		padding: 14,
+		paddingTop: 28,
 		gap: 8,
+	},
+	deleteBtn: {
+		position: 'absolute',
+		top: 8,
+		right: 8,
+		width: 20,
+		height: 20,
+		alignItems: 'center',
+		justifyContent: 'center',
+	},
+	deleteBtnText: {
+		color: colors.accent.red,
+		fontSize: 13,
+		fontWeight: '700',
+		lineHeight: 16,
 	},
 	cardIcon: {
 		width: 44,
