@@ -13,7 +13,7 @@
 		"placeholder": "Buscar"
 	},
 	"home": {
-		"sectionAll": "Todos",
+		"sectionAll": "Todos tus archivos",
 		"noResults": "No se encontraron resultados"
 	},
 	"emptyState": {
@@ -26,7 +26,7 @@
 		"deleteMessage": "¿Deseas eliminar \"{{name}}\" de tu biblioteca?"
 	},
 	"recentCarousel": {
-		"title": "Recientes"
+		"title": "Archivos recientes"
 	},
 	"themeMenu": {
 		"lightMode": "☀️  Modo claro",
@@ -36,15 +36,15 @@
 		"skip": "Omitir",
 		"next": "Siguiente",
 		"gotIt": "Entendido",
-		"homeStep1": "Toca aquí para importar un PDF desde tu dispositivo o recibirlo desde otra app.",
-		"homeStep2": "Para eliminar un archivo, desliza a la izquierda en la lista o toca la ✕ en una tarjeta reciente.",
+		"homeStep1": "Toca aquí para abrir un PDF desde tu dispositivo.",
+		"homeStep2": "Cuando tengas un archivo en la lista de archivos, puedes eliminarlo deslizandolo a la izquierda en la lista, dejando presionado en el archivo o tocando la \"X\" en la tarjeta de \"Archivos recientes\".",
 		"viewerStep1Tap": "Toca",
 		"viewerStep1": "para agregar esta página a tus marcadores y acceder a ella fácilmente.",
-		"viewerStep2": "Abre este menú para acceder al resumen con IA, tus marcadores y la búsqueda en el documento."
+		"viewerStep2": "En este menú prodas hacer resumenes con IA, encontrarás tus marcadores y podrás buscar palabras en el documento."
 	},
 	"viewer": {
-		"previous": "‹ Anterior",
-		"next": "Siguiente ›",
+		"previous": "← Anterior",
+		"next": "Siguiente →",
 		"pageOf": "{{current}} de {{total}}",
 		"summaryAlertTitle": "Resumen con IA",
 		"summaryAlertMessage": "¿Deseas generar un resumen de este documento?",

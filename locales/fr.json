@@ -13,7 +13,7 @@
 		"placeholder": "Rechercher"
 	},
 	"home": {
-		"sectionAll": "Tous",
+		"sectionAll": "Tous tes fichiers",
 		"noResults": "Aucun résultat trouvé"
 	},
 	"emptyState": {
@@ -26,7 +26,7 @@
 		"deleteMessage": "Voulez-vous supprimer \"{{name}}\" de votre bibliothèque ?"
 	},
 	"recentCarousel": {
-		"title": "Récents"
+		"title": "Fichiers récents"
 	},
 	"themeMenu": {
 		"lightMode": "☀️  Mode clair",
@@ -36,15 +36,15 @@
 		"skip": "Passer",
 		"next": "Suivant",
 		"gotIt": "Compris",
-		"homeStep1": "Appuyez ici pour importer un PDF depuis votre appareil ou en recevoir un depuis une autre application.",
-		"homeStep2": "Pour supprimer un fichier, glissez vers la gauche dans la liste ou appuyez sur ✕ sur une carte récente.",
+		"homeStep1": "Clique ici pour ouvrir un fichier PDF depuis ton appareil.",
+		"homeStep2": "Lorsqu'un fichier apparaît dans la liste, vous pouvez le supprimer en le faisant glisser vers la gauche, en appuyant longuement dessus ou en appuyant sur le \"X\" dans la fiche \"Fichiers récents\".",
 		"viewerStep1Tap": "Appuyez",
 		"viewerStep1": "pour ajouter cette page à vos signets et y accéder rapidement.",
-		"viewerStep2": "Ouvrez ce menu pour accéder au résumé IA, vos signets et la recherche dans le document."
+		"viewerStep2": "Dans ce menu, tu peux créer des résumés grâce à l'IA, retrouver tes signets et rechercher des mots dans le document."
 	},
 	"viewer": {
-		"previous": "‹ Précédent",
-		"next": "Suivant ›",
+		"previous": "← Précédent",
+		"next": "Suivant →",
 		"pageOf": "{{current}} sur {{total}}",
 		"summaryAlertTitle": "Résumé IA",
 		"summaryAlertMessage": "Voulez-vous générer un résumé de ce document ?",
