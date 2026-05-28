@@ -6,25 +6,20 @@ import Svg, { Path } from 'react-native-svg'
 import { useThemeStore } from '../../store/themeStore'
 import { colors } from '../../constants/theme'
 
-const FAB_BOTTOM = 64
-const FAB_SIZE = 56
-const CARD_WIDTH = 240
+const CARD_WIDTH = 300
 const DELETE_WIDTH = 80
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window')
-
-const FAB_CX = SCREEN_WIDTH - 24 - FAB_SIZE / 2
-const FAB_CY = SCREEN_HEIGHT - FAB_BOTTOM - FAB_SIZE / 2
 
 const spotlightPath = (cx: number, cy: number, r: number) =>
 	`M0,0 H${SCREEN_WIDTH} V${SCREEN_HEIGHT} H0 Z ` +
 	`M${cx + r},${cy} A${r},${r} 0 1,0 ${cx - r},${cy} A${r},${r} 0 1,0 ${cx + r},${cy} Z`
 
 // Card sits at 12% from top in step 2, ~130px tall → ghost area starts below
-const GHOST_TOP = SCREEN_HEIGHT * 0.12 + 148
+const GHOST_TOP = SCREEN_HEIGHT * 0.18 + 148
 
-type Props = { visible: boolean; onDismiss: () => void }
+type Props = { visible: boolean; onDismiss: () => void; fabCenter: { x: number; y: number } | null }
 
-const HomeTourModal = ({ visible, onDismiss }: Props) => {
+const HomeTourModal = ({ visible, onDismiss, fabCenter }: Props) => {
 	const { isDark } = useThemeStore()
 	const theme = isDark ? colors.dark : colors.light
 	const { t } = useTranslation()
@@ -43,17 +38,23 @@ const HomeTourModal = ({ visible, onDismiss }: Props) => {
 		else setStep(1)
 	}
 
+	const cardBottom = fabCenter ? SCREEN_HEIGHT - fabCenter.y + 44 : 144
 	const cardPosition =
 		step === 0
-			? { bottom: FAB_BOTTOM + FAB_SIZE + 16, right: 12 }
+			? { bottom: cardBottom, right: 12 }
 			: { top: SCREEN_HEIGHT * 0.12, alignSelf: 'center' as const }
 
 	return (
-		<Modal visible transparent animationType="fade" statusBarTranslucent onRequestClose={onDismiss}>
+		<Modal
+			visible
+			transparent
+			animationType="fade"
+			statusBarTranslucent
+			onRequestClose={onDismiss}
+		>
 			<View style={styles.container}>
-
 				{/* Step 0: SVG spotlight on FAB */}
-				{step === 0 && (
+				{step === 0 && fabCenter && (
 					<Svg
 						width={SCREEN_WIDTH}
 						height={SCREEN_HEIGHT}
@@ -61,41 +62,62 @@ const HomeTourModal = ({ visible, onDismiss }: Props) => {
 						pointerEvents="none"
 					>
 						<Path
-							d={spotlightPath(FAB_CX, FAB_CY, 36)}
+							d={spotlightPath(fabCenter.x, fabCenter.y, 36)}
 							fill="rgba(0,0,0,0.72)"
 							fillRule="evenodd"
 						/>
 					</Svg>
 				)}
 
+				{/* Step 0 fallback overlay when FAB not yet measured */}
+				{step === 0 && !fabCenter && (
+					<View
+						style={[StyleSheet.absoluteFill, styles.overlay]}
+						pointerEvents="none"
+					/>
+				)}
+
 				{/* Step 1: flat dark overlay */}
 				{step === 1 && (
-					<View style={[StyleSheet.absoluteFill, styles.overlay]} pointerEvents="none" />
+					<View
+						style={[StyleSheet.absoluteFill, styles.overlay]}
+						pointerEvents="none"
+					/>
 				)}
 
 				{/* Step 2 — ghost placeholder items */}
 				{step === 1 && (
-					<View style={[styles.ghostArea, { top: GHOST_TOP }]}>
-
+					<View style={[styles.ghostArea, { top: GHOST_TOP, }]}>
 						{/* Ghost list item: swipe-left result already revealed */}
 						<View style={styles.ghostRow}>
 							<View style={[styles.ghostListContent, { backgroundColor: theme.surface }]}>
 								<View style={[styles.ghostIcon, { backgroundColor: colors.accent.violet }]} />
 								<View style={styles.ghostLines}>
-									<View style={[styles.ghostLine, { width: 100, backgroundColor: theme.border }]} />
-									<View style={[styles.ghostLine, { width: 65, backgroundColor: theme.border, opacity: 0.5, marginTop: 6 }]} />
+									<View style={[styles.ghostLine, { width: 60, backgroundColor: theme.border }]} />
+									<View style={[styles.ghostLine, { width: 45, backgroundColor: theme.border, opacity: 0.5, marginTop: 6 }]} />
 								</View>
 							</View>
 							<View style={[styles.ghostDeletePanel, { backgroundColor: colors.accent.red }]}>
-								<Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
-									<Path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+								<Svg
+									width={16}
+									height={16}
+									viewBox="0 0 24 24"
+									fill="none"
+								>
+									<Path
+										d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"
+										stroke="#fff"
+										strokeWidth={2}
+										strokeLinecap="round"
+										strokeLinejoin="round"
+									/>
 								</Svg>
 								<Text style={styles.ghostDeleteText}>{t('common.delete')}</Text>
 							</View>
 						</View>
 
 						{/* Ghost carousel card: ✕ visible in corner */}
-						<View style={[styles.ghostCard, { backgroundColor: theme.surface }]}>
+						<View style={[styles.ghostCard, { backgroundColor: theme.surface, }]}>
 							<Text style={styles.ghostCardX}>✕</Text>
 							<View style={[styles.ghostCardIcon, { backgroundColor: colors.accent.teal }]}>
 								<Text style={styles.ghostCardIconText}>PDF</Text>
@@ -103,15 +125,12 @@ const HomeTourModal = ({ visible, onDismiss }: Props) => {
 							<View style={[styles.ghostLine, { width: 72, backgroundColor: theme.border, marginTop: 8 }]} />
 							<View style={[styles.ghostLine, { width: 50, backgroundColor: theme.border, opacity: 0.5, marginTop: 5 }]} />
 						</View>
-
 					</View>
 				)}
 
 				{/* Tooltip card */}
 				<View style={[styles.card, { backgroundColor: theme.surface }, cardPosition]}>
-					<Text style={[styles.text, { color: theme.text }]}>
-						{t(step === 0 ? 'onboarding.homeStep1' : 'onboarding.homeStep2')}
-					</Text>
+					<Text style={[styles.text, { color: theme.text }]}>{t(step === 0 ? 'onboarding.homeStep1' : 'onboarding.homeStep2')}</Text>
 
 					<View style={styles.actions}>
 						{!isLast && (
@@ -119,9 +138,7 @@ const HomeTourModal = ({ visible, onDismiss }: Props) => {
 								onPress={onDismiss}
 								hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
 							>
-								<Text style={[styles.skip, { color: theme.textMuted }]}>
-									{t('onboarding.skip')}
-								</Text>
+								<Text style={[styles.skip, { color: theme.textMuted }]}>{t('onboarding.skip')}</Text>
 							</TouchableOpacity>
 						)}
 						<TouchableOpacity
@@ -129,17 +146,12 @@ const HomeTourModal = ({ visible, onDismiss }: Props) => {
 							style={[styles.nextBtn, { backgroundColor: colors.accent.teal }]}
 							activeOpacity={0.85}
 						>
-							<Text style={styles.nextText}>
-								{isLast ? t('onboarding.gotIt') : t('onboarding.next')}
-							</Text>
+							<Text style={styles.nextText}>{isLast ? t('onboarding.gotIt') : t('onboarding.next')}</Text>
 						</TouchableOpacity>
 					</View>
 
-					{step === 0 && (
-						<View style={[styles.arrowDown, { borderTopColor: theme.surface }]} />
-					)}
+					{step === 0 && <View style={[styles.arrowDown, { borderTopColor: theme.surface }]} />}
 				</View>
-
 			</View>
 		</Modal>
 	)
@@ -217,6 +229,7 @@ const styles = StyleSheet.create({
 		borderRadius: 12,
 		overflow: 'hidden',
 		height: 68,
+		marginTop: 10,
 	},
 	ghostListContent: {
 		flex: 1,
