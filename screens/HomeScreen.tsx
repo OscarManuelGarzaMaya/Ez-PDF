@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native'
 import { useTranslation } from 'react-i18next'
 // Navigation
@@ -40,8 +40,6 @@ const HomeScreen = () => {
 
 	const [searchQuery, setSearchQuery] = useState('')
 	const [showTour, setShowTour] = useState(false)
-	const [fabCenter, setFabCenter] = useState<{ x: number; y: number } | null>(null)
-	const fabRef = useRef<View>(null)
 
 	useEffect(() => {
 		if (!onboardingHydrated || hasSeen) return
@@ -131,20 +129,11 @@ const HomeScreen = () => {
 						ListEmptyComponent={<Text style={[styles.emptySearch, { color: theme.textMuted }]}>{t('home.noResults')}</Text>}
 					/>
 				)}
-				<TouchableOpacity
-					ref={fabRef}
-					style={styles.fab}
-					onPress={handleFABPress}
-					onLayout={() => {
-						fabRef.current?.measureInWindow((x: number, y: number, w: number, h: number) => {
-							setFabCenter({ x: x + w / 2, y: y + h / 2 })
-						})
-					}}
-				>
+				<TouchableOpacity style={styles.fab} onPress={handleFABPress}>
 					<Text style={styles.fabIcon}>+</Text>
 				</TouchableOpacity>
 			</ScreenWrapper>
-			<HomeTourModal visible={showTour && !hasSeen} onDismiss={handleTourDismiss} fabCenter={fabCenter} />
+			<HomeTourModal visible={showTour && !hasSeen} onDismiss={handleTourDismiss} />
 		</>
 	)
 }
