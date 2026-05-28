@@ -13,7 +13,7 @@
 		"placeholder": "Search"
 	},
 	"home": {
-		"sectionAll": "All",
+		"sectionAll": "All your files",
 		"noResults": "No results found"
 	},
 	"emptyState": {
@@ -26,7 +26,7 @@
 		"deleteMessage": "Do you want to delete \"{{name}}\" from your library?"
 	},
 	"recentCarousel": {
-		"title": "Recent"
+		"title": "Recent files"
 	},
 	"themeMenu": {
 		"lightMode": "☀️  Light mode",
@@ -36,15 +36,15 @@
 		"skip": "Skip",
 		"next": "Next",
 		"gotIt": "Got it",
-		"homeStep1": "Tap here to import a PDF from your device or receive one from another app.",
-		"homeStep2": "To remove a file, swipe left on any item in the list or tap the ✕ on a recent card.",
+		"homeStep1": "Tap here to open a PDF on your device.",
+		"homeStep2": "When a file appears in the file list, you can delete it by swiping left on it in the list, pressing and holding the file, or tapping the \"X\" on the “Recent Files” card.",
 		"viewerStep1Tap": "Tap",
 		"viewerStep1": "to bookmark this page and save it for quick access later.",
-		"viewerStep2": "Open this menu to access AI summary, your bookmarks, and in-document search."
+		"viewerStep2": "In this menu, you can generate AI-powered summaries, access your bookmarks, and search for words in the document."
 	},
 	"viewer": {
-		"previous": "‹ Previous",
-		"next": "Next ›",
+		"previous": "← Previous",
+		"next": "Next →",
 		"pageOf": "{{current}} of {{total}}",
 		"summaryAlertTitle": "AI Summary",
 		"summaryAlertMessage": "Do you want to generate a summary for this document?",
