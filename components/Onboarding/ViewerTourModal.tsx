@@ -56,6 +56,7 @@ const ViewerTourModal = ({ visible }: Props) => {
 			transparent
 			animationType="fade"
 			statusBarTranslucent
+			onRequestClose={markViewerSeen}
 		>
 			<View style={styles.container}>
 				{/* Step 0: plain dark overlay */}

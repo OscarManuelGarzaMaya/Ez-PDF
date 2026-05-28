@@ -49,7 +49,7 @@ const HomeTourModal = ({ visible, onDismiss }: Props) => {
 			: { top: SCREEN_HEIGHT * 0.12, alignSelf: 'center' as const }
 
 	return (
-		<Modal visible transparent animationType="fade" statusBarTranslucent>
+		<Modal visible transparent animationType="fade" statusBarTranslucent onRequestClose={onDismiss}>
 			<View style={styles.container}>
 
 				{/* Step 0: SVG spotlight on FAB */}

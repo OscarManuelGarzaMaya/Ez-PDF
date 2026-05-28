@@ -355,17 +355,19 @@ const ViewerScreen = () => {
 
 		if (summaryResult.ok) {
 			return (
-				<ScrollView showsVerticalScrollIndicator={false} style={styles.summaryScroll}>
-					<View
-						style={[
-							styles.summaryBox,
-							{ borderColor: colors.accent.teal, backgroundColor: theme.background },
-						]}
-					>
-						<Text style={[styles.summaryText, { color: theme.text }]}>{summaryResult.summary}</Text>
-					</View>
+				<>
+					<ScrollView showsVerticalScrollIndicator style={styles.summaryScroll}>
+						<View
+							style={[
+								styles.summaryBox,
+								{ borderColor: colors.accent.teal, backgroundColor: theme.background },
+							]}
+						>
+							<Text style={[styles.summaryText, { color: theme.text }]}>{summaryResult.summary}</Text>
+						</View>
+					</ScrollView>
 
-					<View style={styles.creditSection}>
+					<View style={[styles.creditSection, { borderTopColor: theme.border }]}>
 						<Text style={[styles.creditLabel, { color: theme.textMuted }]}>
 							{t('viewer.creditsUsed', { used: summaryResult.used_count, max: MAX_CREDITS })}
 						</Text>
@@ -391,9 +393,7 @@ const ViewerScreen = () => {
 					>
 						<Text style={styles.copyButtonText}>{t('viewer.copySummary')}</Text>
 					</TouchableOpacity>
-
-					<View style={{ height: 16 }} />
-				</ScrollView>
+				</>
 			)
 		}
 
@@ -1081,7 +1081,10 @@ const styles = StyleSheet.create({
 	},
 	creditSection: {
 		gap: 6,
-		marginBottom: 16,
+		paddingTop: 12,
+		marginHorizontal: 16,
+		marginBottom: 12,
+		borderTopWidth: StyleSheet.hairlineWidth,
 	},
 	creditLabel: {
 		fontSize: 13,
