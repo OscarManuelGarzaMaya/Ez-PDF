@@ -83,14 +83,26 @@ const PDFListItem = ({ isDark, pdf, onPress, onDelete }: Props) => {
 
 	return (
 		<View style={styles.wrapper}>
-			<View style={[styles.deleteBackground, { backgroundColor: colors.accent.red }]}>
-				<TouchableOpacity style={styles.deleteAction} onPress={handleDelete}>
-					<Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-						<Path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-					</Svg>
-					<Text style={styles.deleteActionText}>{t('common.delete')}</Text>
-				</TouchableOpacity>
-			</View>
+			<TouchableOpacity
+				style={[styles.deleteBackground, { backgroundColor: colors.accent.red }]}
+				onPress={handleDelete}
+			>
+				<Svg
+					width={20}
+					height={20}
+					viewBox="0 0 24 24"
+					fill="none"
+				>
+					<Path
+						d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"
+						stroke="#fff"
+						strokeWidth={2}
+						strokeLinecap="round"
+						strokeLinejoin="round"
+					/>
+				</Svg>
+				<Text style={styles.deleteActionText}>{t('common.delete')}</Text>
+			</TouchableOpacity>
 
 			<Animated.View
 				style={[styles.container, { backgroundColor: theme.background, borderBottomColor: theme.border, transform: [{ translateX }] }]}
@@ -106,7 +118,10 @@ const PDFListItem = ({ isDark, pdf, onPress, onDelete }: Props) => {
 						<Text style={styles.iconText}>PDF</Text>
 					</View>
 					<View style={styles.info}>
-						<Text style={[styles.name, { color: theme.text }]} numberOfLines={1}>
+						<Text
+							style={[styles.name, { color: theme.text }]}
+							numberOfLines={1}
+						>
 							{pdf.name}
 						</Text>
 						<Text style={[styles.meta, { color: theme.textMuted }]}>
@@ -132,10 +147,6 @@ const styles = StyleSheet.create({
 		top: 0,
 		bottom: 0,
 		width: DELETE_WIDTH,
-		alignItems: 'center',
-		justifyContent: 'center',
-	},
-	deleteAction: {
 		alignItems: 'center',
 		justifyContent: 'center',
 		gap: 4,
