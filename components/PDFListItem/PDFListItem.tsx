@@ -15,8 +15,8 @@ type Props = {
 	onDelete: (pdf: PDF) => void
 }
 
-const formatDate = (timestamp: number) => {
-	return new Date(timestamp).toLocaleDateString('es-MX', {
+const formatDate = (timestamp: number, locale: string) => {
+	return new Date(timestamp).toLocaleDateString(locale, {
 		day: '2-digit',
 		month: 'short',
 		year: 'numeric',
@@ -26,7 +26,7 @@ const formatDate = (timestamp: number) => {
 const PDFListItem = ({ isDark, pdf, onPress, onDelete }: Props) => {
 	const theme = isDark ? colors.dark : colors.light
 	const iconColor = ICON_COLORS[pdf.colorIndex ?? pdf.id.charCodeAt(0) % ICON_COLORS.length]
-	const { t } = useTranslation()
+	const { t, i18n } = useTranslation()
 
 	const translateX = useRef(new Animated.Value(0)).current
 	const isOpen = useRef(false)
@@ -128,7 +128,7 @@ const PDFListItem = ({ isDark, pdf, onPress, onDelete }: Props) => {
 							{(pdf.size / 1024).toFixed(1)} KB
 							{pdf.pages > 0 ? ` · ${pdf.pages} págs` : ''}
 							{' · '}
-							{formatDate(pdf.lastOpened)}
+							{formatDate(pdf.lastOpened, i18n.language)}
 						</Text>
 					</View>
 				</TouchableOpacity>
