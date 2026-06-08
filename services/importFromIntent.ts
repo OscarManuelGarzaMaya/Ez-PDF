@@ -48,10 +48,14 @@ const extractFilename = (uri: string): string => {
 	return `document-${stableNum(uri).toString(36)}.pdf`
 }
 
+// Replaces URI-special and filesystem-unsafe characters so the path is always valid.
+const sanitizeForPath = (name: string): string =>
+	name.replace(/[#?%&+:<>"'|\\]/g, '_')
+
 export const importFromUri = async (uri: string): Promise<string | null> => {
 	try {
 		const filename = (await extractFilenameFromContentResolver(uri)) ?? extractFilename(uri)
-		const destination = `${FileSystem.documentDirectory}${filename}`
+		const destination = `${FileSystem.documentDirectory}${sanitizeForPath(filename)}`
 
 		await FileSystem.copyAsync({ from: uri, to: destination })
 
