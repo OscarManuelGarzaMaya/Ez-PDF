@@ -3,6 +3,11 @@ import * as FileSystem from 'expo-file-system/legacy'
 import { PDF } from '../store/pdfStore'
 import { ICON_COLORS } from '../constants/theme'
 
+// Replaces URI-special and filesystem-unsafe characters so the path is always valid.
+// The original name is preserved separately for display.
+const sanitizeForPath = (name: string): string =>
+	name.replace(/[#?%&+:<>"'|\\]/g, '_')
+
 export const pickPDF = async (): Promise<PDF | null> => {
 	try {
 		const result = await DocumentPicker.getDocumentAsync({
@@ -14,7 +19,7 @@ export const pickPDF = async (): Promise<PDF | null> => {
 
 		const file = result.assets[0]
 
-		const destination = `${FileSystem.documentDirectory}${file.name}`
+		const destination = `${FileSystem.documentDirectory}${sanitizeForPath(file.name)}`
 		await FileSystem.copyAsync({
 			from: file.uri,
 			to: destination,
