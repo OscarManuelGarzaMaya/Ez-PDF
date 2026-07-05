@@ -1,6 +1,7 @@
 {
 	"common": {
 		"cancel": "Cancelar",
+		"ok": "Aceptar",
 		"loading": "Cargando...",
 		"no": "No",
 		"yes": "Sí",
@@ -56,6 +57,8 @@
 		"creditsUsed": "{{used}} de {{max}} disponibles este mes",
 		"renewsOn": "Se renueva el {{date}}",
 		"copySummary": "Copiar resumen",
+		"summaryPageLimitTitle": "Documento demasiado extenso",
+		"summaryPageLimitMessage": "Los resúmenes con IA están disponibles solo para documentos de hasta 100 páginas. Este PDF tiene {{pages}} páginas.",
 		"limitTitle": "Límite mensual alcanzado",
 		"errorTitle": "Ocurrió un error",
 		"errorMessage": "Inténtalo de nuevo más tarde",

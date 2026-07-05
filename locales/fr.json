@@ -1,6 +1,7 @@
 {
 	"common": {
 		"cancel": "Annuler",
+		"ok": "D'accord",
 		"loading": "Chargement...",
 		"no": "Non",
 		"yes": "Oui",
@@ -56,6 +57,8 @@
 		"creditsUsed": "{{used}} sur {{max}} disponibles ce mois",
 		"renewsOn": "Renouvellement le {{date}}",
 		"copySummary": "Copier le résumé",
+		"summaryPageLimitTitle": "Document trop long",
+		"summaryPageLimitMessage": "Les résumés IA sont disponibles uniquement pour les documents de 100 pages maximum. Ce PDF contient {{pages}} pages.",
 		"limitTitle": "Limite mensuelle atteinte",
 		"errorTitle": "Une erreur s'est produite",
 		"errorMessage": "Veuillez réessayer plus tard",

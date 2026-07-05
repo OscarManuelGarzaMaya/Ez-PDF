@@ -1,6 +1,7 @@
 {
 	"common": {
 		"cancel": "Cancel",
+		"ok": "OK",
 		"loading": "Loading...",
 		"no": "No",
 		"yes": "Yes",
@@ -56,6 +57,8 @@
 		"creditsUsed": "{{used}} of {{max}} available this month",
 		"renewsOn": "Renews on {{date}}",
 		"copySummary": "Copy summary",
+		"summaryPageLimitTitle": "Document too long",
+		"summaryPageLimitMessage": "AI summaries are only available for documents up to 100 pages. This PDF has {{pages}} pages.",
 		"limitTitle": "Monthly limit reached",
 		"errorTitle": "Something went wrong",
 		"errorMessage": "Please try again later",
