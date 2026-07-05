@@ -1,5 +1,5 @@
 import './i18n'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useColorScheme, Linking } from 'react-native'
 import { useLocales } from 'expo-localization'
 import i18n, { resolveLocale } from './i18n'
@@ -41,10 +41,10 @@ export default function App() {
 	const { isDark, _hasHydrated: themeHydrated, syncWithSystem } = useThemeStore()
 	const theme = isDark ? colors.dark : colors.light
 	const { deviceId, _hasHydrated } = useDeviceStore()
-	const { pdfs, pruneDeleted } = usePdfStore()
+	const { pdfs, pruneDeleted, _hasHydrated: pdfHydrated } = usePdfStore()
 	const locales = useLocales()
 	const didInitialSync = useRef(false)
-	const pendingUri = useRef<string | null>(null)
+	const [pendingUri, setPendingUri] = useState<string | null>(null)
 	const pendingPdfId = useRef<string | null>(null)
 
 	const navigateToViewer = (pdfId: string) => {
@@ -65,23 +65,24 @@ export default function App() {
 	// Capture cold-start URI before store is hydrated
 	useEffect(() => {
 		Linking.getInitialURL().then((url) => {
-			if (url) pendingUri.current = url
+			if (url && !url.startsWith('exp+')) setPendingUri(url)
 		})
 
 		const sub = Linking.addEventListener('url', ({ url }) => {
-			if (url) handleIncomingPdf(url)
+			if (url && !url.startsWith('exp+')) handleIncomingPdf(url)
 		})
 
 		return () => sub.remove()
 	}, [])
 
-	// Process cold-start URI once store is ready
+	// Process cold-start URI once both stores are ready — using state for pendingUri
+	// ensures this effect re-runs regardless of which resolves first: store hydration
+	// or Linking.getInitialURL() (the latter is async and can lose the race).
 	useEffect(() => {
-		if (!_hasHydrated || !pendingUri.current) return
-		const uri = pendingUri.current
-		pendingUri.current = null
-		handleIncomingPdf(uri)
-	}, [_hasHydrated])
+		if (!_hasHydrated || !pdfHydrated || !pendingUri) return
+		setPendingUri(null)
+		handleIncomingPdf(pendingUri)
+	}, [_hasHydrated, pdfHydrated, pendingUri])
 
 	useEffect(() => {
 		i18n.changeLanguage(resolveLocale(locales[0]?.languageCode))
