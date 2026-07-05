@@ -294,6 +294,15 @@ const ViewerScreen = () => {
 	closeSearchRef.current = closeSearch
 
 	const openSummary = () => {
+		if (totalPages > 100) {
+			Alert.alert(
+				t('viewer.summaryPageLimitTitle'),
+				t('viewer.summaryPageLimitMessage', { pages: totalPages }),
+				[{ text: t('common.ok') }],
+				{ cancelable: true }
+			)
+			return
+		}
 		if (fabOpen) closeFab()
 		Alert.alert(
 			t('viewer.summaryAlertTitle'),
