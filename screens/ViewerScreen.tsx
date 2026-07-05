@@ -649,7 +649,7 @@ const ViewerScreen = () => {
 			</Animated.View>
 
 			{/* FAB */}
-			<View style={[styles.fabContainer, { bottom: fabBottom, opacity: summaryOpen ? 0 : 1 }]} pointerEvents={summaryOpen ? 'none' : 'auto'}>
+			<View style={[styles.fabContainer, { bottom: fabBottom, opacity: summaryOpen ? 0 : 1 }]} pointerEvents={summaryOpen ? 'none' : 'box-none'}>
 				<View pointerEvents={fabOpen ? 'auto' : 'none'}>
 					{MINI_FABS.map(({ label, color, renderIcon }, i) => {
 						const anim = miniFabAnims[i]
