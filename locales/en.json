@@ -24,7 +24,8 @@
 	},
 	"pdfListItem": {
 		"deleteTitle": "Delete PDF",
-		"deleteMessage": "Do you want to delete \"{{name}}\" from your library?"
+		"deleteMessage": "Do you want to delete \"{{name}}\" from your library?",
+		"footer": "All Rigts Reserver @ 2026 OSCAR GARZA"
 	},
 	"recentCarousel": {
 		"title": "Recent files"

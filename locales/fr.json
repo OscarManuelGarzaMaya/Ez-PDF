@@ -24,7 +24,8 @@
 	},
 	"pdfListItem": {
 		"deleteTitle": "Supprimer le PDF",
-		"deleteMessage": "Voulez-vous supprimer \"{{name}}\" de votre bibliothèque ?"
+		"deleteMessage": "Voulez-vous supprimer \"{{name}}\" de votre bibliothèque ?",
+		"footer": "Tous droits réservés @ 2026 OSCAR GARZA"
 	},
 	"recentCarousel": {
 		"title": "Fichiers récents"
