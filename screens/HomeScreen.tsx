@@ -127,13 +127,20 @@ const HomeScreen = () => {
 							/>
 						)}
 						ListEmptyComponent={<Text style={[styles.emptySearch, { color: theme.textMuted }]}>{t('home.noResults')}</Text>}
+						ListFooterComponent={<Text style={styles.flatlistFooter}>{t('pdfListItem.footer')}</Text>}
 					/>
 				)}
-				<TouchableOpacity style={styles.fab} onPress={handleFABPress}>
+				<TouchableOpacity
+					style={styles.fab}
+					onPress={handleFABPress}
+				>
 					<Text style={styles.fabIcon}>+</Text>
 				</TouchableOpacity>
 			</ScreenWrapper>
-			<HomeTourModal visible={showTour && !hasSeen} onDismiss={handleTourDismiss} />
+			<HomeTourModal
+				visible={showTour && !hasSeen}
+				onDismiss={handleTourDismiss}
+			/>
 		</>
 	)
 }
@@ -153,6 +160,12 @@ const styles = StyleSheet.create({
 		textAlign: 'center',
 		marginTop: 40,
 		fontSize: 15,
+	},
+	flatlistFooter: {
+		textAlign: 'center',
+		paddingVertical: 25,
+		paddingHorizontal: 10,
+		color: 'rgba(247, 242, 242, 0.3)',
 	},
 	fab: {
 		position: 'absolute',
