@@ -1,22 +1,18 @@
 import './i18n'
 import { useEffect, useRef, useState } from 'react'
 import { useColorScheme, Linking } from 'react-native'
+
+// Libraries
 import { useLocales } from 'expo-localization'
 import i18n, { resolveLocale } from './i18n'
-import { StatusBar } from 'expo-status-bar'
 import * as SplashScreen from 'expo-splash-screen'
 import * as FileSystem from 'expo-file-system/legacy'
-
-SplashScreen.preventAutoHideAsync()
-
-// Navigation
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
-import { SafeAreaProvider } from 'react-native-safe-area-context'
 
 // Theme & colors
 import { useThemeStore } from './store/themeStore'
-import { colors } from './constants/theme'
 
 // Screens
 import HomeScreen from './screens/HomeScreen'
@@ -27,6 +23,10 @@ import { useDeviceStore } from './store/deviceStore'
 import { initSession } from './services/session'
 import { usePdfStore } from './store/pdfStore'
 import { importFromUri } from './services/importFromIntent'
+
+SplashScreen.preventAutoHideAsync()
+
+// Navigation
 
 export type RootStackParamList = {
 	Home: undefined
@@ -39,7 +39,6 @@ export const navigationRef = createNavigationContainerRef<RootStackParamList>()
 export default function App() {
 	const colorScheme = useColorScheme()
 	const { isDark, _hasHydrated: themeHydrated, syncWithSystem } = useThemeStore()
-	const theme = isDark ? colors.dark : colors.light
 	const { deviceId, _hasHydrated } = useDeviceStore()
 	const { pdfs, pruneDeleted, _hasHydrated: pdfHydrated } = usePdfStore()
 	const locales = useLocales()
@@ -106,7 +105,7 @@ export default function App() {
 				pdfs.map(async (p) => {
 					const info = await FileSystem.getInfoAsync(p.uri)
 					return info.exists ? null : p.id
-				})
+				}),
 			)
 			const stale = checks.filter((id): id is string => id !== null)
 			if (stale.length > 0) pruneDeleted(stale)
@@ -121,11 +120,7 @@ export default function App() {
 	}, [_hasHydrated, themeHydrated])
 
 	return (
-		<SafeAreaProvider>
-			<StatusBar
-				style={isDark ? 'light' : 'dark'}
-				backgroundColor={theme.surface}
-			/>
+		<SafeAreaView style={{ flex: 1 }}>
 			<NavigationContainer
 				ref={navigationRef}
 				onReady={() => {
@@ -149,6 +144,6 @@ export default function App() {
 					/>
 				</Stack.Navigator>
 			</NavigationContainer>
-		</SafeAreaProvider>
+		</SafeAreaView>
 	)
 }

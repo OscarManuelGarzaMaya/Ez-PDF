@@ -1,11 +1,4 @@
-import {
-	View,
-	Text,
-	ScrollView,
-	TouchableOpacity,
-	StyleSheet,
-	Alert,
-} from 'react-native'
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useTranslation } from 'react-i18next'
 import { PDF } from '../../store/pdfStore'
@@ -19,75 +12,68 @@ type Props = {
 }
 
 const RecentCarousel = ({ isDark, pdfs, onPress, onDelete }: Props) => {
-    const theme = isDark ? colors.dark : colors.light
-    const { t } = useTranslation()
+	const theme = isDark ? colors.dark : colors.light
+	const { t } = useTranslation()
 
-    const confirmDelete = (pdf: PDF) => {
-        Alert.alert(
-            t('pdfListItem.deleteTitle'),
-            t('pdfListItem.deleteMessage', { name: pdf.name }),
-            [
-                { text: t('common.cancel'), style: 'cancel' },
-                { text: t('common.delete'), style: 'destructive', onPress: () => onDelete(pdf) },
-            ],
-            { cancelable: true }
-        )
-    }
+	const confirmDelete = (pdf: PDF) => {
+		Alert.alert(
+			t('pdfListItem.deleteTitle'),
+			t('pdfListItem.deleteMessage', { name: pdf.name }),
+			[
+				{ text: t('common.cancel'), style: 'cancel' },
+				{ text: t('common.delete'), style: 'destructive', onPress: () => onDelete(pdf) },
+			],
+			{ cancelable: true },
+		)
+	}
 
-    return (
-					<View style={styles.wrapper}>
-						<Text style={[styles.sectionTitle, { color: theme.text }]}>
-							{t('recentCarousel.title')}
-						</Text>
-						<View>
-							<ScrollView
-								horizontal
-								showsHorizontalScrollIndicator={false}
-								contentContainerStyle={styles.scrollContent}
+	return (
+		<View style={styles.wrapper}>
+			<Text style={[styles.sectionTitle, { color: theme.text }]}>{t('recentCarousel.title')}</Text>
+			<View>
+				<ScrollView
+					horizontal
+					showsHorizontalScrollIndicator={false}
+					contentContainerStyle={styles.scrollContent}
+				>
+					{pdfs.map((pdf) => (
+						<TouchableOpacity
+							key={pdf.id}
+							style={[styles.card, { backgroundColor: theme.surface }]}
+							onPress={() => onPress(pdf)}
+							onLongPress={() => confirmDelete(pdf)}
+							delayLongPress={500}
+						>
+							<TouchableOpacity
+								style={styles.deleteBtn}
+								onPress={() => confirmDelete(pdf)}
+								hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
 							>
-								{pdfs.map((pdf) => (
-									<TouchableOpacity
-										key={pdf.id}
-										style={[styles.card, { backgroundColor: theme.surface }]}
-										onPress={() => onPress(pdf)}
-										onLongPress={() => confirmDelete(pdf)}
-										delayLongPress={500}
-									>
-										<TouchableOpacity
-											style={styles.deleteBtn}
-											onPress={() => confirmDelete(pdf)}
-											hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-										>
-											<Text style={styles.deleteBtnText}>✕</Text>
-										</TouchableOpacity>
-										<View style={[styles.cardIcon, { backgroundColor: ICON_COLORS[pdf.colorIndex ?? pdf.id.charCodeAt(0) % ICON_COLORS.length] }]}>
-											<Text style={styles.cardIconText}>PDF</Text>
-										</View>
-										<Text
-											style={[styles.cardName, { color: theme.text }]}
-											numberOfLines={2}
-										>
-											{pdf.name}
-										</Text>
-										<Text style={[styles.cardSize, { color: theme.textMuted }]}>
-											{(pdf.size / 1024).toFixed(1)} KB
-										</Text>
-									</TouchableOpacity>
-								))}
-							</ScrollView>
-							<LinearGradient
-								colors={[
-									'transparent',
-									isDark ? colors.dark.background : colors.light.background,
-								]}
-								start={{ x: 0, y: 1}}
-								end={{ x: 1, y: 1 }}
-								style={styles.fadeRight}
-								pointerEvents="none"
-							/>
-						</View>
-					</View>
-				)
+								<Text style={styles.deleteBtnText}>✕</Text>
+							</TouchableOpacity>
+							<View style={[styles.cardIcon, { backgroundColor: ICON_COLORS[pdf.colorIndex ?? pdf.id.charCodeAt(0) % ICON_COLORS.length] }]}>
+								<Text style={styles.cardIconText}>PDF</Text>
+							</View>
+							<Text
+								style={[styles.cardName, { color: theme.text }]}
+								numberOfLines={2}
+							>
+								{pdf.name}
+							</Text>
+							<Text style={[styles.cardSize, { color: theme.textMuted }]}>{(pdf.size / 1024).toFixed(1)} KB</Text>
+						</TouchableOpacity>
+					))}
+				</ScrollView>
+				<LinearGradient
+					colors={['transparent', isDark ? colors.dark.background : colors.light.background]}
+					start={{ x: 0, y: 1 }}
+					end={{ x: 1, y: 1 }}
+					style={styles.fadeRight}
+					pointerEvents="none"
+				/>
+			</View>
+		</View>
+	)
 }
 
 const styles = StyleSheet.create({
