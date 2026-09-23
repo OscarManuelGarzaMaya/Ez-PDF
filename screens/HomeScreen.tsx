@@ -127,7 +127,6 @@ const HomeScreen = () => {
 							/>
 						)}
 						ListEmptyComponent={<Text style={[styles.emptySearch, { color: theme.textMuted }]}>{t('home.noResults')}</Text>}
-						ListFooterComponent={<Text style={styles.flatlistFooter}>{t('pdfListItem.footer')}</Text>}
 					/>
 				)}
 				<TouchableOpacity

@@ -43,8 +43,7 @@ const PDFListItem = ({ isDark, pdf, onPress, onDelete }: Props) => {
 
 	const panResponder = useRef(
 		PanResponder.create({
-			onMoveShouldSetPanResponder: (_, { dx, dy }) =>
-				Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 8,
+			onMoveShouldSetPanResponder: (_, { dx, dy }) => Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 8,
 			onPanResponderMove: (_, { dx }) => {
 				const base = isOpen.current ? -DELETE_WIDTH : 0
 				const next = Math.min(0, Math.max(-DELETE_WIDTH, base + dx))
@@ -55,16 +54,22 @@ const PDFListItem = ({ isDark, pdf, onPress, onDelete }: Props) => {
 				if (base + dx < -SWIPE_THRESHOLD) snapOpen()
 				else snapClose()
 			},
-		})
+		}),
 	).current
 
 	const handlePress = () => {
-		if (isOpen.current) { snapClose(); return }
+		if (isOpen.current) {
+			snapClose()
+			return
+		}
 		onPress(pdf)
 	}
 
 	const handleLongPress = () => {
-		if (isOpen.current) { snapClose(); return }
+		if (isOpen.current) {
+			snapClose()
+			return
+		}
 		Alert.alert(
 			t('pdfListItem.deleteTitle'),
 			t('pdfListItem.deleteMessage', { name: pdf.name }),
@@ -72,7 +77,7 @@ const PDFListItem = ({ isDark, pdf, onPress, onDelete }: Props) => {
 				{ text: t('common.cancel'), style: 'cancel' },
 				{ text: t('common.delete'), style: 'destructive', onPress: () => onDelete(pdf) },
 			],
-			{ cancelable: true }
+			{ cancelable: true },
 		)
 	}
 
