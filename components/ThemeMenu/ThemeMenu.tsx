@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { Dispatch, SetStateAction, useState } from 'react'
 import { View, Text, TouchableOpacity, Pressable, StyleSheet, Modal } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useTranslation } from 'react-i18next'
@@ -8,9 +8,10 @@ import { useThemeStore } from '../../store/themeStore'
 type Props = {
 	isDark: boolean
 	barHeight?: number
+	setShowTour: Dispatch<SetStateAction<boolean>>
 }
 
-const ThemeMenu = ({ isDark, barHeight = 56 }: Props) => {
+const ThemeMenu = ({ isDark, barHeight = 56, setShowTour }: Props) => {
 	const [open, setOpen] = useState(false)
 	const { toggleTheme } = useThemeStore()
 	const { top } = useSafeAreaInsets()
@@ -33,20 +34,28 @@ const ThemeMenu = ({ isDark, barHeight = 56 }: Props) => {
 				animationType="none"
 				onRequestClose={() => setOpen(false)}
 			>
-				<Pressable style={styles.backdrop} onPress={() => setOpen(false)}>
-					<View
-						style={[
-							styles.dropdown,
-							{ backgroundColor: theme.surface, top: top + barHeight },
-						]}
-					>
+				<Pressable
+					style={styles.backdrop}
+					onPress={() => setOpen(false)}
+				>
+					<View style={[styles.dropdown, { backgroundColor: theme.surface, top: top + barHeight }]}>
 						<TouchableOpacity
 							style={styles.item}
-							onPress={() => { toggleTheme(); setOpen(false) }}
+							onPress={() => {
+								toggleTheme()
+								setOpen(false)
+							}}
 						>
-							<Text style={[styles.itemText, { color: theme.text }]}>
-								{isDark ? t('themeMenu.lightMode') : t('themeMenu.darkMode')}
-							</Text>
+							<Text style={[styles.itemText, { color: theme.text }]}>{isDark ? t('themeMenu.lightMode') : t('themeMenu.darkMode')}</Text>
+						</TouchableOpacity>
+						<TouchableOpacity
+							style={styles.item}
+							onPress={() => {
+								setShowTour(true)
+								setOpen(false)
+							}}
+						>
+							<Text style={[styles.itemText, { color: theme.text }]}>{t('themeMenu.tutorial')}</Text>
 						</TouchableOpacity>
 					</View>
 				</Pressable>

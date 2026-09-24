@@ -90,6 +90,7 @@ const HomeScreen = () => {
 				<AppBar
 					isDark={isDark}
 					pdfCount={pdfs.length}
+                    setShowTour={setShowTour}
 				/>
 				<SearchBar
 					isDark={isDark}
@@ -137,7 +138,7 @@ const HomeScreen = () => {
 				</TouchableOpacity>
 			</ScreenWrapper>
 			<HomeTourModal
-				visible={showTour && !hasSeen}
+				visible={showTour}
 				onDismiss={handleTourDismiss}
 			/>
 		</>
@@ -168,7 +169,7 @@ const styles = StyleSheet.create({
 	},
 	fab: {
 		position: 'absolute',
-		bottom: 64,
+		bottom: 20,
 		right: 24,
 		width: 56,
 		height: 56,

@@ -1,3 +1,4 @@
+import { Dispatch, SetStateAction } from 'react'
 import { View, Text, StyleSheet } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { colors } from '../../constants/theme'
@@ -6,9 +7,10 @@ import ThemeMenu from '../ThemeMenu/ThemeMenu'
 type Props = {
 	isDark: boolean
 	pdfCount: number
+    setShowTour: Dispatch<SetStateAction<boolean>>
 }
 
-const AppBar = ({ isDark, pdfCount }: Props) => {
+const AppBar = ({ isDark, pdfCount, setShowTour }: Props) => {
 	const theme = isDark ? colors.dark : colors.light
 	const { t } = useTranslation()
 
@@ -18,7 +20,7 @@ const AppBar = ({ isDark, pdfCount }: Props) => {
 			<View style={styles.badge}>
 				<Text style={styles.badgeText}>{pdfCount}</Text>
 			</View>
-			<ThemeMenu isDark={isDark} />
+			<ThemeMenu isDark={isDark} setShowTour={setShowTour} />
 		</View>
 	)
 }

@@ -32,7 +32,8 @@
 	},
 	"themeMenu": {
 		"lightMode": "☀️  Modo claro",
-		"darkMode": "🌙  Modo oscuro"
+		"darkMode": "🌙  Modo oscuro",
+        "tutorial": "❓​ Ver tutorial"
 	},
 	"onboarding": {
 		"skip": "Omitir",
