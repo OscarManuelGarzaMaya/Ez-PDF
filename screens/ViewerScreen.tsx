@@ -46,6 +46,7 @@ import ThemeMenu from '../components/ThemeMenu/ThemeMenu'
 // Services
 import { generateSummary } from '../services/summary'
 import ViewerTourModal from '../components/Onboarding/ViewerTourModal'
+import { measureSpotlight, type SpotlightRect } from '../components/Onboarding/spotlight'
 import { useOnboardingStore } from '../store/onboardingStore'
 import type { SummaryResult } from '../services/summary'
 
@@ -101,7 +102,7 @@ const ViewerScreen = () => {
 	const { deviceId } = useDeviceStore()
 	const theme = isDark ? colors.dark : colors.light
 	const { t, i18n } = useTranslation()
-	const { hasSeenViewerTour, _hasHydrated: onboardingHydrated } = useOnboardingStore()
+	const { hasSeenViewerTour, markViewerSeen, _hasHydrated: onboardingHydrated } = useOnboardingStore()
 
 	const MINI_FABS = [
 		{ label: t('viewer.aiOverview'), color: colors.accent.teal, renderIcon: () => <Text style={styles.miniFabIcon}>✦</Text> },
@@ -135,6 +136,14 @@ const ViewerScreen = () => {
 	const [summaryOpen, setSummaryOpen] = useState(false)
 	const [summaryLoading, setSummaryLoading] = useState(false)
 	const [summaryResult, setSummaryResult] = useState<SummaryResult | null>(null)
+
+	// — Tour —
+	const [showTour, setShowTour] = useState(false)
+	const [fabRect, setFabRect] = useState<SpotlightRect | null>(null)
+	const [bookmarkRect, setBookmarkRect] = useState<SpotlightRect | null>(null)
+	const fabRef = useRef<View>(null)
+	const bookmarkRef = useRef<View>(null)
+	const rootRef = useRef<View>(null)
 
 	// — Refs: PDF —
 	const pdfRef = useRef<any>(null)
@@ -232,8 +241,25 @@ const ViewerScreen = () => {
 	}, [])
 
 	useEffect(() => {
-		if (onboardingHydrated && !hasSeenViewerTour && totalPages > 0) showBars()
+		if (!onboardingHydrated || hasSeenViewerTour || totalPages === 0) return
+		showBars()
+		const timer = setTimeout(() => setShowTour(true), 600)
+		return () => clearTimeout(timer)
 	}, [onboardingHydrated, hasSeenViewerTour, totalPages])
+
+	// Measure on open: the FAB moves with the panels, so onLayout alone would go stale
+	useEffect(() => {
+		if (!showTour) return
+		measureSpotlight(fabRef.current, rootRef.current, setFabRect)
+		measureSpotlight(bookmarkRef.current, rootRef.current, setBookmarkRect)
+	}, [showTour])
+
+	const handleTourDismiss = () => {
+		setShowTour(false)
+		setFabRect(null)
+		setBookmarkRect(null)
+		markViewerSeen()
+	}
 
 	if (!pdf) return null
 
@@ -540,10 +566,9 @@ const ViewerScreen = () => {
 		return (insets.bottom || 0) + BAR_HEIGHT + 16
 	})()
 
-	const tourVisible = onboardingHydrated && !hasSeenViewerTour && totalPages > 0
-
 	return (
-		<ScreenWrapper>
+		<>
+		<ScreenWrapper ref={rootRef}>
 			{/* Top Bar */}
 			<Animated.View
 				pointerEvents={barsVisible ? 'auto' : 'none'}
@@ -564,7 +589,7 @@ const ViewerScreen = () => {
 					{pdf.name}
 				</Text>
 
-				<TouchableOpacity onPress={toggleCurrentPageBookmark} style={styles.barButton}>
+				<TouchableOpacity ref={bookmarkRef} onPress={toggleCurrentPageBookmark} style={styles.barButton}>
 					<BookmarkIcon
 						filled={currentPageIsBookmarked}
 						color={currentPageIsBookmarked ? colors.accent.violet : theme.textMuted}
@@ -575,7 +600,7 @@ const ViewerScreen = () => {
 					{currentPage}/{totalPages}
 				</Text>
 
-				<ThemeMenu isDark={isDark} barHeight={BAR_HEIGHT} />
+				<ThemeMenu isDark={isDark} barHeight={BAR_HEIGHT} setShowTour={setShowTour} />
 			</Animated.View>
 
 			{/* PDF */}
@@ -676,7 +701,7 @@ const ViewerScreen = () => {
 					})}
 				</View>
 
-				<TouchableOpacity style={styles.fab} onPress={toggleFab} activeOpacity={1}>
+				<TouchableOpacity ref={fabRef} style={styles.fab} onPress={toggleFab} activeOpacity={1}>
 					<ChevronIcon up={!fabOpen} />
 				</TouchableOpacity>
 			</View>
@@ -865,8 +890,14 @@ const ViewerScreen = () => {
 					)}
 				</Animated.View>
 			)}
-			<ViewerTourModal visible={tourVisible} />
 		</ScreenWrapper>
+		<ViewerTourModal
+			visible={showTour}
+			fabRect={fabRect}
+			bookmarkRect={bookmarkRect}
+			onDismiss={handleTourDismiss}
+		/>
+		</>
 	)
 }
 
