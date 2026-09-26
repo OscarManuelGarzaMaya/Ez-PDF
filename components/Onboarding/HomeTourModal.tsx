@@ -1,33 +1,23 @@
 import { useState, useEffect } from 'react'
-import { Modal, View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native'
+import { Modal, View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import Svg, { Path } from 'react-native-svg'
 
 import { useThemeStore } from '../../store/themeStore'
 import { colors } from '../../constants/theme'
+import { SpotlightRect, SPOTLIGHT_PADDING, spotlightPath } from './spotlight'
 
 const CARD_WIDTH = 300
 const DELETE_WIDTH = 80
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window')
 
-// FAB: bottom: 64, right: 24, size: 56 — same coordinate space as Dimensions.get('window')
-const FAB_CX = SCREEN_WIDTH - 24 - 28
-const FAB_CY = SCREEN_HEIGHT - 64 - 28
+type Props = { visible: boolean; fabRect: SpotlightRect | null; onDismiss: () => void }
 
-const spotlightPath = (cx: number, cy: number, r: number) =>
-	`M0,0 H${SCREEN_WIDTH} V${SCREEN_HEIGHT} H0 Z ` +
-	`M${cx + r},${cy} A${r},${r} 0 1,0 ${cx - r},${cy} A${r},${r} 0 1,0 ${cx + r},${cy} Z`
-
-// Card sits at 12% from top in step 2, ~130px tall → ghost area starts below
-const GHOST_TOP = SCREEN_HEIGHT * 0.18 + 148
-
-type Props = { visible: boolean; onDismiss: () => void }
-
-const HomeTourModal = ({ visible, onDismiss }: Props) => {
+const HomeTourModal = ({ visible, fabRect, onDismiss }: Props) => {
 	const { isDark } = useThemeStore()
 	const theme = isDark ? colors.dark : colors.light
 	const { t } = useTranslation()
 	const [step, setStep] = useState(0)
+	const [size, setSize] = useState<{ width: number; height: number } | null>(null)
 
 	useEffect(() => {
 		if (visible) setStep(0)
@@ -42,10 +32,41 @@ const HomeTourModal = ({ visible, onDismiss }: Props) => {
 		else setStep(1)
 	}
 
-	const cardPosition =
-		step === 0
-			? { bottom: SCREEN_HEIGHT - FAB_CY + 44, right: 12 }
-			: { top: SCREEN_HEIGHT * 0.12, alignSelf: 'center' as const }
+	const screenW = size?.width ?? 0
+	const screenH = size?.height ?? 0
+	const fabCx = fabRect ? fabRect.x + fabRect.width  / 2 : 0
+	const fabCy = fabRect ? fabRect.y + fabRect.height / 2 : 0
+	// Tighter than the default spotlight padding
+	const spotlightR = fabRect ? (Math.max(fabRect.width, fabRect.height) / 2 + SPOTLIGHT_PADDING) * 0.85 : 0
+	const ready = size !== null && (step !== 0 || fabRect !== null)
+
+	const fabCardPosition = { bottom: screenH - fabCy + spotlightR + 12, right: Math.max(12, screenW - fabCx - 36) }
+
+	const cardContent = (
+		<>
+			<Text style={[styles.text, { color: theme.text }]}>{t(step === 0 ? 'onboarding.homeStep1' : 'onboarding.homeStep2')}</Text>
+
+			<View style={styles.actions}>
+				{!isLast && (
+					<TouchableOpacity
+						onPress={onDismiss}
+						hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+					>
+						<Text style={[styles.skip, { color: theme.textMuted }]}>{t('onboarding.skip')}</Text>
+					</TouchableOpacity>
+				)}
+				<TouchableOpacity
+					onPress={handleNext}
+					style={[styles.nextBtn, { backgroundColor: colors.accent.teal }]}
+					activeOpacity={0.85}
+				>
+					<Text style={styles.nextText}>{isLast ? t('onboarding.gotIt') : t('onboarding.next')}</Text>
+				</TouchableOpacity>
+			</View>
+
+			{step === 0 && <View style={[styles.arrowDown, { borderTopColor: theme.surface }]} />}
+		</>
+	)
 
 	return (
 		<Modal
@@ -55,18 +76,23 @@ const HomeTourModal = ({ visible, onDismiss }: Props) => {
 			statusBarTranslucent
 			onRequestClose={onDismiss}
 		>
-			<View style={styles.container}>
+			<View
+				style={styles.container}
+				onLayout={(e) => setSize({ width: e.nativeEvent.layout.width, height: e.nativeEvent.layout.height })}
+			>
+				{!ready ? null : (
+				<>
 				{/* Step 0: SVG spotlight on FAB */}
 				{step === 0 && (
 					<Svg
-						width={SCREEN_WIDTH}
-						height={SCREEN_HEIGHT}
+						width={screenW}
+						height={screenH}
 						style={StyleSheet.absoluteFill}
 						pointerEvents="none"
 					>
 						<Path
-							d={spotlightPath(FAB_CX, FAB_CY, 36)}
-							fill="rgba(0,0,0,0.7)"
+							d={spotlightPath(screenW, screenH, fabCx, fabCy, spotlightR)}
+							fill="rgba(0,0,0,0.4)"
 							fillRule="evenodd"
 						/>
 					</Svg>
@@ -80,73 +106,63 @@ const HomeTourModal = ({ visible, onDismiss }: Props) => {
 					/>
 				)}
 
-				{/* Step 2 — ghost placeholder items */}
-				{step === 1 && (
-					<View style={[styles.ghostArea, { top: GHOST_TOP, }]}>
-						{/* Ghost list item: swipe-left result already revealed */}
-						<View style={styles.ghostRow}>
-							<View style={[styles.ghostListContent, { backgroundColor: theme.surface }]}>
-								<View style={[styles.ghostIcon, { backgroundColor: colors.accent.violet }]} />
-								<View style={styles.ghostLines}>
-									<View style={[styles.ghostLine, { width: 60, backgroundColor: theme.border }]} />
-									<View style={[styles.ghostLine, { width: 45, backgroundColor: theme.border, opacity: 0.5, marginTop: 6 }]} />
-								</View>
-							</View>
-							<View style={[styles.ghostDeletePanel, { backgroundColor: colors.accent.red }]}>
-								<Svg
-									width={16}
-									height={16}
-									viewBox="0 0 24 24"
-									fill="none"
-								>
-									<Path
-										d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"
-										stroke="#fff"
-										strokeWidth={2}
-										strokeLinecap="round"
-										strokeLinejoin="round"
-									/>
-								</Svg>
-								<Text style={styles.ghostDeleteText}>{t('common.delete')}</Text>
-							</View>
-						</View>
-
-						{/* Ghost carousel card: ✕ visible in corner */}
-						<View style={[styles.ghostCard, { backgroundColor: theme.surface, }]}>
-							<Text style={styles.ghostCardX}>✕</Text>
-							<View style={[styles.ghostCardIcon, { backgroundColor: colors.accent.teal }]}>
-								<Text style={styles.ghostCardIconText}>PDF</Text>
-							</View>
-							<View style={[styles.ghostLine, { width: 72, backgroundColor: theme.border, marginTop: 8 }]} />
-							<View style={[styles.ghostLine, { width: 50, backgroundColor: theme.border, opacity: 0.5, marginTop: 5 }]} />
-						</View>
+				{/* Step 0: card anchored to the FAB */}
+				{step === 0 && (
+					<View style={[styles.card, styles.cardFloating, { backgroundColor: theme.surface }, fabCardPosition]}>
+						{cardContent}
 					</View>
 				)}
 
-				{/* Tooltip card */}
-				<View style={[styles.card, { backgroundColor: theme.surface }, cardPosition]}>
-					<Text style={[styles.text, { color: theme.text }]}>{t(step === 0 ? 'onboarding.homeStep1' : 'onboarding.homeStep2')}</Text>
+				{/* Step 1: card + ghost items stacked in flow, so ghosts always sit below the card regardless of its height */}
+				{step === 1 && (
+					<View style={[styles.stepColumn, { top: screenH * 0.12 }]}>
+						<View style={[styles.card, { backgroundColor: theme.surface }]}>
+							{cardContent}
+						</View>
 
-					<View style={styles.actions}>
-						{!isLast && (
-							<TouchableOpacity
-								onPress={onDismiss}
-								hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-							>
-								<Text style={[styles.skip, { color: theme.textMuted }]}>{t('onboarding.skip')}</Text>
-							</TouchableOpacity>
-						)}
-						<TouchableOpacity
-							onPress={handleNext}
-							style={[styles.nextBtn, { backgroundColor: colors.accent.teal }]}
-							activeOpacity={0.85}
-						>
-							<Text style={styles.nextText}>{isLast ? t('onboarding.gotIt') : t('onboarding.next')}</Text>
-						</TouchableOpacity>
+						<View style={styles.ghostArea}>
+							{/* Ghost list item: swipe-left result already revealed */}
+							<View style={styles.ghostRow}>
+								<View style={[styles.ghostListContent, { backgroundColor: theme.surface }]}>
+									<View style={[styles.ghostIcon, { backgroundColor: colors.accent.violet }]} />
+									<View style={styles.ghostLines}>
+										<View style={[styles.ghostLine, { width: 60, backgroundColor: theme.border }]} />
+										<View style={[styles.ghostLine, { width: 45, backgroundColor: theme.border, opacity: 0.5, marginTop: 6 }]} />
+									</View>
+								</View>
+								<View style={[styles.ghostDeletePanel, { backgroundColor: colors.accent.red }]}>
+									<Svg
+										width={16}
+										height={16}
+										viewBox="0 0 24 24"
+										fill="none"
+									>
+										<Path
+											d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"
+											stroke="#fff"
+											strokeWidth={2}
+											strokeLinecap="round"
+											strokeLinejoin="round"
+										/>
+									</Svg>
+									<Text style={styles.ghostDeleteText}>{t('common.delete')}</Text>
+								</View>
+							</View>
+
+							{/* Ghost carousel card: ✕ visible in corner */}
+							<View style={[styles.ghostCard, { backgroundColor: theme.surface }]}>
+								<Text style={styles.ghostCardX}>✕</Text>
+								<View style={[styles.ghostCardIcon, { backgroundColor: colors.accent.teal }]}>
+									<Text style={styles.ghostCardIconText}>PDF</Text>
+								</View>
+								<View style={[styles.ghostLine, { width: 72, backgroundColor: theme.border, marginTop: 8 }]} />
+								<View style={[styles.ghostLine, { width: 50, backgroundColor: theme.border, opacity: 0.5, marginTop: 5 }]} />
+							</View>
+						</View>
 					</View>
-
-					{step === 0 && <View style={[styles.arrowDown, { borderTopColor: theme.surface }]} />}
-				</View>
+				)}
+				</>
+				)}
 			</View>
 		</Modal>
 	)
@@ -160,8 +176,8 @@ const styles = StyleSheet.create({
 		backgroundColor: 'rgba(0,0,0,0.72)',
 	},
 	card: {
-		position: 'absolute',
 		width: CARD_WIDTH,
+		maxWidth: '100%',
 		borderRadius: 14,
 		padding: 16,
 		elevation: 12,
@@ -169,6 +185,17 @@ const styles = StyleSheet.create({
 		shadowOffset: { width: 0, height: 4 },
 		shadowOpacity: 0.25,
 		shadowRadius: 8,
+	},
+	cardFloating: {
+		position: 'absolute',
+		maxWidth: undefined,
+	},
+	stepColumn: {
+		position: 'absolute',
+		left: 20,
+		right: 20,
+		alignItems: 'center',
+		gap: 24,
 	},
 	arrowDown: {
 		position: 'absolute',
@@ -210,9 +237,7 @@ const styles = StyleSheet.create({
 
 	// Ghost placeholders
 	ghostArea: {
-		position: 'absolute',
-		left: 20,
-		right: 20,
+		alignSelf: 'stretch',
 		flexDirection: 'row',
 		alignItems: 'center',
 		gap: 12,

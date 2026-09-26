@@ -1,33 +1,31 @@
 import { useState, useEffect } from 'react'
-import { Modal, View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { Modal, View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import Svg, { Path } from 'react-native-svg'
 
 import { useThemeStore } from '../../store/themeStore'
-import { useOnboardingStore } from '../../store/onboardingStore'
 import { colors } from '../../constants/theme'
+import { SpotlightRect, rectCenter, spotlightPath } from './spotlight'
 
-const BAR_HEIGHT = 56
-const FAB_SIZE = 56
 const CARD_WIDTH = 240
+const CARD_MARGIN = 12
+const ARROW_HALF = 9
 const BOOKMARK_OUTLINE = 'M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2zm0 15-5-2.18L7 18V5h10v13z'
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window')
 
-// SVG overlay: full-screen rect with a circular hole at (cx, cy) radius r
-const spotlightPath = (cx: number, cy: number, r: number) =>
-	`M0,0 H${SCREEN_WIDTH} V${SCREEN_HEIGHT} H0 Z ` +
-	`M${cx + r},${cy} A${r},${r} 0 1,0 ${cx - r},${cy} A${r},${r} 0 1,0 ${cx + r},${cy} Z`
+type Props = {
+	visible: boolean
+	fabRect: SpotlightRect | null
+	bookmarkRect: SpotlightRect | null
+	onDismiss: () => void
+}
 
-type Props = { visible: boolean }
-
-const ViewerTourModal = ({ visible }: Props) => {
+const ViewerTourModal = ({ visible, fabRect, bookmarkRect, onDismiss }: Props) => {
 	const { isDark } = useThemeStore()
 	const theme = isDark ? colors.dark : colors.light
-	const { markViewerSeen } = useOnboardingStore()
 	const { t } = useTranslation()
-	const insets = useSafeAreaInsets()
 	const [step, setStep] = useState(0)
+	// Real Modal size; Dimensions.get('window') varies per device on Android (nav bar)
+	const [size, setSize] = useState<{ width: number; height: number } | null>(null)
 
 	useEffect(() => {
 		if (visible) setStep(0)
@@ -38,17 +36,27 @@ const ViewerTourModal = ({ visible }: Props) => {
 	const isLast = step === 1
 
 	const handleNext = () => {
-		if (isLast) markViewerSeen()
+		if (isLast) onDismiss()
 		else setStep(1)
 	}
 
-	// FAB: right: 20, size: 56 → center X = SCREEN_WIDTH - 48 (device-independent)
-	const fabCx = SCREEN_WIDTH - 48
-	const fabCy = SCREEN_HEIGHT - (insets.bottom + BAR_HEIGHT + 16) - FAB_SIZE / 2
+	const screenW = size?.width ?? 0
+	const screenH = size?.height ?? 0
+	// Step 0 points at the bookmark button, step 1 at the FAB
+	const target = step === 0 ? bookmarkRect : fabRect
+	// Wait until the Modal and the current target are measured
+	const ready = size !== null && target !== null
+	const { cx, cy, r: baseR } = target ? rectCenter(target) : { cx: 0, cy: 0, r: 0 }
+	// Tighter than the default spotlight padding
+	const r = baseR * 0.9
+
+	// Keep the card on screen, then slide the arrow so it still points at the target
+	const cardRight = Math.min(Math.max(CARD_MARGIN, screenW - cx - 37), screenW - CARD_WIDTH - CARD_MARGIN)
+	const arrowRight = screenW - cx - cardRight - ARROW_HALF
 
 	const cardPosition = step === 0
-		? { top: insets.top + BAR_HEIGHT + 12, right: 12 }
-		: { bottom: insets.bottom + BAR_HEIGHT + FAB_SIZE + 20, right: 12 }
+		? { top: cy + r + 12, right: cardRight }
+		: { bottom: screenH - cy + r + 12, right: cardRight }
 
 	return (
 		<Modal
@@ -56,36 +64,31 @@ const ViewerTourModal = ({ visible }: Props) => {
 			transparent
 			animationType="fade"
 			statusBarTranslucent
-			onRequestClose={markViewerSeen}
+			onRequestClose={onDismiss}
 		>
-			<View style={styles.container}>
-				{/* Step 0: plain dark overlay */}
-				{step === 0 && (
-					<View
-						style={[StyleSheet.absoluteFill, styles.overlay]}
-						pointerEvents="none"
+			<View
+				style={styles.container}
+				onLayout={(e) => setSize({ width: e.nativeEvent.layout.width, height: e.nativeEvent.layout.height })}
+			>
+				{!ready ? null : (
+				<>
+				{/* SVG spotlight on the measured target (bookmark in step 0, FAB in step 1) */}
+				<Svg
+					width={screenW}
+					height={screenH}
+					style={StyleSheet.absoluteFill}
+					pointerEvents="none"
+				>
+					<Path
+						d={spotlightPath(screenW, screenH, cx, cy, r)}
+						fill="rgba(0,0,0,0.72)"
+						fillRule="evenodd"
 					/>
-				)}
-
-				{/* Step 1: SVG spotlight on the FAB (position is device-independent) */}
-				{step === 1 && (
-					<Svg
-						width={SCREEN_WIDTH}
-						height={SCREEN_HEIGHT}
-						style={StyleSheet.absoluteFill}
-						pointerEvents="none"
-					>
-						<Path
-							d={spotlightPath(fabCx, fabCy, 36)}
-							fill="rgba(0,0,0,0.72)"
-							fillRule="evenodd"
-						/>
-					</Svg>
-				)}
+				</Svg>
 
 				{/* Tooltip card */}
 				<View style={[styles.card, { backgroundColor: theme.surface }, cardPosition]}>
-					{step === 0 && <View style={[styles.arrowUp, { borderBottomColor: theme.surface }]} />}
+					{step === 0 && <View style={[styles.arrowUp, { borderBottomColor: theme.surface, right: arrowRight }]} />}
 
 					{step === 0 ? (
 						<Text style={[styles.text, { color: theme.text, textAlign: 'auto' }]}>
@@ -110,7 +113,7 @@ const ViewerTourModal = ({ visible }: Props) => {
 					<View style={styles.actions}>
 						{!isLast && (
 							<TouchableOpacity
-								onPress={markViewerSeen}
+								onPress={onDismiss}
 								hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
 							>
 								<Text style={[styles.skip, { color: theme.textMuted }]}>{t('onboarding.skip')}</Text>
@@ -125,8 +128,10 @@ const ViewerTourModal = ({ visible }: Props) => {
 						</TouchableOpacity>
 					</View>
 
-					{step === 1 && <View style={[styles.arrowDown, { borderTopColor: theme.surface }]} />}
+					{step === 1 && <View style={[styles.arrowDown, { borderTopColor: theme.surface, right: arrowRight }]} />}
 				</View>
+				</>
+				)}
 			</View>
 		</Modal>
 	)
@@ -135,9 +140,6 @@ const ViewerTourModal = ({ visible }: Props) => {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-	},
-	overlay: {
-		backgroundColor: 'rgba(0,0,0,0.72)',
 	},
 	inlineText: {
 		flexDirection: 'row',

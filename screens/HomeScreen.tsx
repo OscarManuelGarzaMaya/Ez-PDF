@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native'
 import { useTranslation } from 'react-i18next'
 // Navigation
@@ -26,6 +26,7 @@ import RecentCarousel from '../components/RecentCarousel/RecentCarousel'
 import PDFListItem from '../components/PDFListItem/PDFListItem'
 import EmptyState from '../components/EmptyState/EmptyState'
 import HomeTourModal from '../components/Onboarding/HomeTourModal'
+import { measureSpotlight, type SpotlightRect } from '../components/Onboarding/spotlight'
 
 type HomeNavProp = NativeStackNavigationProp<RootStackParamList, 'Home'>
 
@@ -40,6 +41,12 @@ const HomeScreen = () => {
 
 	const [searchQuery, setSearchQuery] = useState('')
 	const [showTour, setShowTour] = useState(false)
+	const [fabRect, setFabRect] = useState<SpotlightRect | null>(null)
+	const fabRef = useRef<View>(null)
+	const rootRef = useRef<View>(null)
+
+	// Position of the FAB on screen, used to place the tour spotlight
+	const measureFab = () => measureSpotlight(fabRef.current, rootRef.current, setFabRect)
 
 	useEffect(() => {
 		if (!onboardingHydrated || hasSeen) return
@@ -86,11 +93,11 @@ const HomeScreen = () => {
 
 	return (
 		<>
-			<ScreenWrapper>
+			<ScreenWrapper ref={rootRef}>
 				<AppBar
 					isDark={isDark}
 					pdfCount={pdfs.length}
-                    setShowTour={setShowTour}
+					setShowTour={setShowTour}
 				/>
 				<SearchBar
 					isDark={isDark}
@@ -131,14 +138,17 @@ const HomeScreen = () => {
 					/>
 				)}
 				<TouchableOpacity
+					ref={fabRef}
 					style={styles.fab}
 					onPress={handleFABPress}
+					onLayout={measureFab}
 				>
 					<Text style={styles.fabIcon}>+</Text>
 				</TouchableOpacity>
 			</ScreenWrapper>
 			<HomeTourModal
 				visible={showTour}
+				fabRect={fabRect}
 				onDismiss={handleTourDismiss}
 			/>
 		</>

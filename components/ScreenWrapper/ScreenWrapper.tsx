@@ -3,19 +3,21 @@ import { useSafeArea, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { StatusBar } from 'expo-status-bar'
 import { useThemeStore } from '../../store/themeStore'
 import { colors } from '../../constants/theme'
-import type { ReactNode } from 'react'
+import type { ReactNode, Ref } from 'react'
 
 type Props = {
 	children: ReactNode
+	// Full-screen root; used as the reference frame for onboarding spotlights
+	ref?: Ref<View>
 }
 
-const ScreenWrapper = ({ children }: Props) => {
+const ScreenWrapper = ({ children, ref }: Props) => {
 	const { isDark } = useThemeStore()
 	const theme = isDark ? colors.dark : colors.light
 	const insets = useSafeAreaInsets()
 
 	return (
-		<View style={[styles.container, { backgroundColor: theme.background }]}>
+		<View ref={ref} style={[styles.container, { backgroundColor: theme.background }]}>
 			<StatusBar style={isDark ? 'light' : 'dark'} />
 			<View style={{ height: insets.top, backgroundColor: theme.surface }} />
 			{children}
