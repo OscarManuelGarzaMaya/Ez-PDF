@@ -33,7 +33,7 @@
 	"themeMenu": {
 		"lightMode": "☀️  Modo claro",
 		"darkMode": "🌙  Modo oscuro",
-        "tutorial": "❓​ Ver tutorial"
+		"tutorial": "❓​ Ver tutorial"
 	},
 	"onboarding": {
 		"skip": "Omitir",
@@ -69,6 +69,9 @@
 		"searchNext": "Siguiente →",
 		"aiOverview": "Resumen con IA",
 		"bookmarks": "Marcadores",
-		"search": "Búsqueda"
+		"search": "Búsqueda",
+		"print": "Imprimir",
+		"printErrorTitle": "Hubo un error al imprimir. Por favor, intentalo de nuevo.",
+		"printErrorMessage": "Ocurrió un error al enviar el documento a imprimir. Inténtalo de nuevo."
 	}
 }

@@ -69,6 +69,9 @@
 		"searchNext": "Suivant →",
 		"aiOverview": "Aperçu IA",
 		"bookmarks": "Signets",
-		"search": "Recherche"
+		"search": "Recherche",
+		"print": "Imprimer",
+		"printErrorTitle": "Impression impossible",
+		"printErrorMessage": "Une erreur s'est produite lors de l'envoi du document à l'impression. Veuillez réessayer."
 	}
 }
