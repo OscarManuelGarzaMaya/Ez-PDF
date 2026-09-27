@@ -69,6 +69,9 @@
 		"searchNext": "Next →",
 		"aiOverview": "AI Overview",
 		"bookmarks": "Bookmarks",
-		"search": "Search"
+		"search": "Search",
+		"print": "Print",
+		"printErrorTitle": "Couldn't print",
+		"printErrorMessage": "Something went wrong while sending the document to print. Please try again."
 	}
 }
