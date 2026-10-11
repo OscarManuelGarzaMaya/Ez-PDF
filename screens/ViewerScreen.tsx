@@ -680,31 +680,36 @@ const ViewerScreen = () => {
 					/>
 				</Animated.View>
 
-				{/* PDF */}
-				<Pdf
-					// Remount on each password attempt so both platforms reload the document
-					key={password}
-					ref={pdfRef}
-					pdfId={PDF_ID}
-					source={{ uri: pdf.uri }}
-					password={password}
-					onError={handleLoadError}
-					style={styles.pdf}
-					fitPolicy={0}
-					scale={1}
-					minScale={0.5}
-					maxScale={5}
-					spacing={8}
-					enableAntialiasing
-					enableDoubleTapZoom
-					highlightRects={searchResults.map((r) => ({ page: r.page, rect: r.rect }))}
-					onLoadComplete={(numberOfPages) => {
-						setTotalPages(numberOfPages)
-						updateLastOpened(pdf.id)
-					}}
-					onPageChanged={handlePageChanged}
-					onPageSingleTap={toggleBars}
-				/>
+				{/* PDF — unmounted while the password prompt is open so each attempt gets a fresh
+				    native view. Swapping it via `key` instead breaks page navigation on Android:
+				    the library's PdfManager keeps a single global view reference that the old
+				    view's drop nulls out after the new view is created. */}
+				{passwordPromptOpen ? (
+					<View style={styles.pdf} />
+				) : (
+					<Pdf
+						ref={pdfRef}
+						pdfId={PDF_ID}
+						source={{ uri: pdf.uri }}
+						password={password}
+						onError={handleLoadError}
+						style={styles.pdf}
+						fitPolicy={0}
+						scale={1}
+						minScale={0.5}
+						maxScale={5}
+						spacing={8}
+						enableAntialiasing
+						enableDoubleTapZoom
+						highlightRects={searchResults.map((r) => ({ page: r.page, rect: r.rect }))}
+						onLoadComplete={(numberOfPages) => {
+							setTotalPages(numberOfPages)
+							updateLastOpened(pdf.id)
+						}}
+						onPageChanged={handlePageChanged}
+						onPageSingleTap={toggleBars}
+					/>
+				)}
 
 				{/* Bottom Bar */}
 				<Animated.View
