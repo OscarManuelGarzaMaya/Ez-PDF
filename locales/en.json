@@ -72,6 +72,16 @@
 		"search": "Search",
 		"print": "Print",
 		"printErrorTitle": "Couldn't print",
-		"printErrorMessage": "Something went wrong while sending the document to print. Please try again."
+		"printErrorMessage": "Something went wrong while sending the document to print. Please try again.",
+		"loadErrorTitle": "Couldn't open this PDF",
+		"loadErrorMessage": "The file may be damaged or in an unsupported format.",
+		"goBack": "Go back",
+		"passwordTitle": "Password protected",
+		"passwordMessage": "\"{{name}}\" is protected. Enter its password to open it.",
+		"passwordIncorrect": "Incorrect password. Please try again.",
+		"passwordPlaceholder": "Password",
+		"passwordOpen": "Open",
+		"protectedUnsupportedTitle": "Not available",
+		"protectedUnsupportedMessage": "This option isn't available for password-protected documents yet."
 	}
 }
