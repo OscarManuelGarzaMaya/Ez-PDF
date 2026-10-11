@@ -71,7 +71,17 @@
 		"bookmarks": "Marcadores",
 		"search": "Búsqueda",
 		"print": "Imprimir",
-		"printErrorTitle": "Hubo un error al imprimir. Por favor, intentalo de nuevo.",
-		"printErrorMessage": "Ocurrió un error al enviar el documento a imprimir. Inténtalo de nuevo."
+		"printErrorTitle": "No se pudo imprimir",
+		"printErrorMessage": "Ocurrió un error al enviar el documento a imprimir. Inténtalo de nuevo.",
+		"loadErrorTitle": "No se pudo abrir este PDF",
+		"loadErrorMessage": "Es posible que el archivo esté dañado o tenga un formato no compatible.",
+		"goBack": "Regresar",
+		"passwordTitle": "Protegido con contraseña",
+		"passwordMessage": "\"{{name}}\" está protegido. Ingresa su contraseña para abrirlo.",
+		"passwordIncorrect": "Contraseña incorrecta. Inténtalo de nuevo.",
+		"passwordPlaceholder": "Contraseña",
+		"passwordOpen": "Abrir",
+		"protectedUnsupportedTitle": "No disponible",
+		"protectedUnsupportedMessage": "Esta opción aún no está disponible para documentos protegidos con contraseña."
 	}
 }

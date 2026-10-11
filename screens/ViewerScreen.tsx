@@ -15,6 +15,7 @@ import {
 	ScrollView,
 	ActivityIndicator,
 	Dimensions,
+	Modal,
 } from 'react-native'
 import Svg, { G, Path } from 'react-native-svg'
 
@@ -170,6 +171,12 @@ const ViewerScreen = () => {
 	const [summaryOpen, setSummaryOpen] = useState(false)
 	const [summaryLoading, setSummaryLoading] = useState(false)
 	const [summaryResult, setSummaryResult] = useState<SummaryResult | null>(null)
+
+	// Kept in memory only — never persisted
+	const [password, setPassword] = useState('')
+	const [passwordInput, setPasswordInput] = useState('')
+	const [passwordPromptOpen, setPasswordPromptOpen] = useState(false)
+	const [loadFailed, setLoadFailed] = useState(false)
 
 	const [showTour, setShowTour] = useState(false)
 	const [fabRect, setFabRect] = useState<SpotlightRect | null>(null)
@@ -344,7 +351,40 @@ const ViewerScreen = () => {
 
 	closeSearchRef.current = closeSearch
 
+	const isProtected = password !== ''
+
+	// Both platforms report a locked document with "Password required or incorrect password."
+	const handleLoadError = (error: unknown) => {
+		const message = error instanceof Error ? error.message : String(error)
+		if (/password/i.test(message)) {
+			setPasswordInput('')
+			setPasswordPromptOpen(true)
+			return
+		}
+		setLoadFailed(true)
+	}
+
+	const submitPassword = () => {
+		if (!passwordInput) return
+		setPasswordPromptOpen(false)
+		setPassword(passwordInput)
+	}
+
+	const cancelPasswordPrompt = () => {
+		setPasswordPromptOpen(false)
+		navigation.goBack()
+	}
+
+	const alertProtectedUnsupported = () => {
+		if (fabOpen) closeFab()
+		Alert.alert(t('viewer.protectedUnsupportedTitle'), t('viewer.protectedUnsupportedMessage'), [{ text: t('common.ok') }])
+	}
+
 	const openSummary = () => {
+		if (isProtected) {
+			alertProtectedUnsupported()
+			return
+		}
 		if (totalPages > 100) {
 			Alert.alert(t('viewer.summaryPageLimitTitle'), t('viewer.summaryPageLimitMessage', { pages: totalPages }), [{ text: t('common.ok') }], { cancelable: true })
 			return
@@ -497,6 +537,10 @@ const ViewerScreen = () => {
 	}
 
 	const handlePrint = async () => {
+		if (isProtected) {
+			alertProtectedUnsupported()
+			return
+		}
 		if (fabOpen) closeFab()
 		if (isPrinting.current) return
 		isPrinting.current = true
@@ -512,7 +556,7 @@ const ViewerScreen = () => {
 				},
 			})
 		} catch (error) {
-			Alert.alert(t('print.errorTitle'), t('print.errorMessage'))
+			Alert.alert(t('viewer.printErrorTitle'), t('viewer.printErrorMessage'))
 		} finally {
 			isPrinting.current = false
 		}
@@ -638,9 +682,13 @@ const ViewerScreen = () => {
 
 				{/* PDF */}
 				<Pdf
+					// Remount on each password attempt so both platforms reload the document
+					key={password}
 					ref={pdfRef}
 					pdfId={PDF_ID}
 					source={{ uri: pdf.uri }}
+					password={password}
+					onError={handleLoadError}
 					style={styles.pdf}
 					fitPolicy={0}
 					scale={1}
@@ -939,7 +987,69 @@ const ViewerScreen = () => {
 						)}
 					</Animated.View>
 				)}
+
+				{/* Load error */}
+				{loadFailed && (
+					<View style={[styles.loadError, { backgroundColor: theme.background }]}>
+						<Text style={styles.summaryStateIcon}>⚠️</Text>
+						<Text style={[styles.summaryStateTitle, { color: theme.text }]}>{t('viewer.loadErrorTitle')}</Text>
+						<Text style={[styles.summaryStateMessage, { color: theme.textMuted }]}>{t('viewer.loadErrorMessage')}</Text>
+						<TouchableOpacity
+							style={[styles.copyButton, styles.loadErrorButton, { backgroundColor: colors.accent.violet }]}
+							onPress={() => navigation.goBack()}
+						>
+							<Text style={styles.copyButtonText}>{t('viewer.goBack')}</Text>
+						</TouchableOpacity>
+					</View>
+				)}
 			</ScreenWrapper>
+
+			{/* Password prompt */}
+			<Modal
+				visible={passwordPromptOpen}
+				transparent
+				animationType="fade"
+				onRequestClose={cancelPasswordPrompt}
+			>
+				<View style={styles.passwordBackdrop}>
+					<View style={[styles.passwordDialog, { backgroundColor: theme.surface }]}>
+						<Text style={styles.summaryStateIcon}>🔒</Text>
+						<Text style={[styles.summaryStateTitle, { color: theme.text }]}>{t('viewer.passwordTitle')}</Text>
+						<Text style={[styles.summaryStateMessage, { color: isProtected ? colors.accent.orange : theme.textMuted }]}>
+							{isProtected ? t('viewer.passwordIncorrect') : t('viewer.passwordMessage', { name: pdf.name })}
+						</Text>
+						<TextInput
+							value={passwordInput}
+							onChangeText={setPasswordInput}
+							onSubmitEditing={submitPassword}
+							placeholder={t('viewer.passwordPlaceholder')}
+							placeholderTextColor={theme.textMuted}
+							secureTextEntry
+							autoFocus
+							autoCapitalize="none"
+							autoCorrect={false}
+							returnKeyType="done"
+							style={[styles.searchInput, styles.passwordInput, { color: theme.text, borderColor: theme.border }]}
+						/>
+						<View style={styles.passwordActions}>
+							<TouchableOpacity
+								style={styles.searchNavButton}
+								onPress={cancelPasswordPrompt}
+							>
+								<Text style={[styles.searchNavText, { color: theme.textMuted }]}>{t('common.cancel')}</Text>
+							</TouchableOpacity>
+							<TouchableOpacity
+								style={styles.searchNavButton}
+								onPress={submitPassword}
+								disabled={!passwordInput}
+							>
+								<Text style={[styles.searchNavText, { color: passwordInput ? colors.accent.violet : theme.textMuted }]}>{t('viewer.passwordOpen')}</Text>
+							</TouchableOpacity>
+						</View>
+					</View>
+				</View>
+			</Modal>
+
 			<ViewerTourModal
 				visible={showTour}
 				fabRect={fabRect}
@@ -1267,6 +1377,47 @@ const styles = StyleSheet.create({
 	searchNavText: {
 		fontSize: 14,
 		fontWeight: '600',
+	},
+	// Load error & password prompt
+	loadError: {
+		...StyleSheet.absoluteFillObject,
+		alignItems: 'center',
+		justifyContent: 'center',
+		paddingHorizontal: 32,
+		gap: 10,
+		zIndex: 60,
+	},
+	loadErrorButton: {
+		marginTop: 12,
+		paddingHorizontal: 32,
+	},
+	passwordBackdrop: {
+		flex: 1,
+		backgroundColor: 'rgba(0,0,0,0.55)',
+		alignItems: 'center',
+		justifyContent: 'center',
+		paddingHorizontal: 24,
+	},
+	passwordDialog: {
+		width: '100%',
+		maxWidth: 400,
+		borderRadius: 16,
+		paddingTop: 24,
+		paddingHorizontal: 20,
+		paddingBottom: 8,
+		alignItems: 'center',
+		gap: 10,
+	},
+	passwordInput: {
+		flex: 0,
+		alignSelf: 'stretch',
+		height: 44,
+		marginTop: 6,
+	},
+	passwordActions: {
+		flexDirection: 'row',
+		alignSelf: 'flex-end',
+		gap: 8,
 	},
 })
 

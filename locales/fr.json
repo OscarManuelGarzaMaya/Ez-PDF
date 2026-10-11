@@ -33,7 +33,7 @@
 	"themeMenu": {
 		"lightMode": "☀️  Mode clair",
 		"darkMode": "🌙  Mode sombre",
-        "tutorial": "❓​ Voir le tutoriel"
+		"tutorial": "❓​ Voir le tutoriel"
 	},
 	"onboarding": {
 		"skip": "Passer",
@@ -72,6 +72,16 @@
 		"search": "Recherche",
 		"print": "Imprimer",
 		"printErrorTitle": "Impression impossible",
-		"printErrorMessage": "Une erreur s'est produite lors de l'envoi du document à l'impression. Veuillez réessayer."
+		"printErrorMessage": "Une erreur s'est produite lors de l'envoi du document à l'impression. Veuillez réessayer.",
+		"loadErrorTitle": "Impossible d'ouvrir ce PDF",
+		"loadErrorMessage": "Le fichier est peut-être endommagé ou dans un format non pris en charge.",
+		"goBack": "Retour",
+		"passwordTitle": "Protégé par mot de passe",
+		"passwordMessage": "« {{name}} » est protégé. Saisissez son mot de passe pour l'ouvrir.",
+		"passwordIncorrect": "Mot de passe incorrect. Veuillez réessayer.",
+		"passwordPlaceholder": "Mot de passe",
+		"passwordOpen": "Ouvrir",
+		"protectedUnsupportedTitle": "Non disponible",
+		"protectedUnsupportedMessage": "Cette option n'est pas encore disponible pour les documents protégés par mot de passe."
 	}
 }
