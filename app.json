@@ -71,7 +71,17 @@
     },
     "plugins": [
       "react-native-pdf-jsi",
-      "expo-localization"
+      "expo-localization",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableMinifyInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true,
+            "extraProguardRules": "# react-native-pdf-jsi: JNI/JSI bridge classes and its PDF engine are looked up by name at runtime\n-keep class org.wonday.pdf.** { *; }\n-keep class io.legere.pdfiumandroid.** { *; }\n-keep class com.github.barteksc.pdfviewer.** { *; }\n-keep class com.google.gson.** { *; }\n-keepattributes Signature,*Annotation*\n-keepclasseswithmembernames class * { native <methods>; }\n# react-native-blob-util (peer dependency of react-native-pdf-jsi)\n-keep class com.ReactNativeBlobUtil.** { *; }\n# Keep readable stack traces in Play Console crash reports\n-keepattributes SourceFile,LineNumberTable"
+          }
+        }
+      ]
     ],
     "extra": {
       "eas": {
