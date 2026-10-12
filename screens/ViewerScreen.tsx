@@ -20,7 +20,7 @@ import {
 import Svg, { G, Path } from 'react-native-svg'
 
 // Libraries
-import Pdf, { searchTextDirect } from 'react-native-pdf-jsi'
+import { searchTextDirect } from 'react-native-pdf-jsi'
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import * as Clipboard from 'expo-clipboard'
@@ -43,6 +43,7 @@ import { colors } from '../constants/theme'
 // Components
 import ScreenWrapper from '../components/ScreenWrapper/ScreenWrapper'
 import ThemeMenu from '../components/ThemeMenu/ThemeMenu'
+import PdfPane from '../components/PdfPane/PdfPane'
 
 // Services
 import { generateSummary } from '../services/summary'
@@ -296,6 +297,26 @@ const ViewerScreen = () => {
 		setBookmarkRect(null)
 		markViewerSeen()
 	}
+
+	const highlightRects = useMemo(() => searchResults.map((r) => ({ page: r.page, rect: r.rect })), [searchResults])
+
+	// Latest-ref pattern: PdfPane gets callbacks whose identity never changes, so its memo holds,
+	// while each call still reaches the handler from the most recent render (assigned further below).
+	const pdfEvents = useRef({
+		onLoadComplete: (_numberOfPages: number) => {},
+		onPageChanged: (_page: number) => {},
+		onPageSingleTap: () => {},
+		onError: (_error: unknown) => {},
+	})
+	const stablePdfEvents = useMemo(
+		() => ({
+			onLoadComplete: (numberOfPages: number) => pdfEvents.current.onLoadComplete(numberOfPages),
+			onPageChanged: (page: number) => pdfEvents.current.onPageChanged(page),
+			onPageSingleTap: () => pdfEvents.current.onPageSingleTap(),
+			onError: (error: unknown) => pdfEvents.current.onError(error),
+		}),
+		[],
+	)
 
 	if (!pdf) return null
 
@@ -610,6 +631,16 @@ const ViewerScreen = () => {
 		isNavigatingByButton.current = false
 	}
 
+	pdfEvents.current = {
+		onLoadComplete: (numberOfPages) => {
+			setTotalPages(numberOfPages)
+			updateLastOpened(pdf.id)
+		},
+		onPageChanged: handlePageChanged,
+		onPageSingleTap: toggleBars,
+		onError: handleLoadError,
+	}
+
 	const handlePrevPage = () => {
 		if (currentPage <= 1) return
 		isNavigatingByButton.current = true
@@ -687,27 +718,13 @@ const ViewerScreen = () => {
 				{passwordPromptOpen ? (
 					<View style={styles.pdf} />
 				) : (
-					<Pdf
-						ref={pdfRef}
+					<PdfPane
+						pdfRef={pdfRef}
 						pdfId={PDF_ID}
-						source={{ uri: pdf.uri }}
+						uri={pdf.uri}
 						password={password}
-						onError={handleLoadError}
-						style={styles.pdf}
-						fitPolicy={0}
-						scale={1}
-						minScale={0.5}
-						maxScale={5}
-						spacing={8}
-						enableAntialiasing
-						enableDoubleTapZoom
-						highlightRects={searchResults.map((r) => ({ page: r.page, rect: r.rect }))}
-						onLoadComplete={(numberOfPages) => {
-							setTotalPages(numberOfPages)
-							updateLastOpened(pdf.id)
-						}}
-						onPageChanged={handlePageChanged}
-						onPageSingleTap={toggleBars}
+						highlightRects={highlightRects}
+						{...stablePdfEvents}
 					/>
 				)}
 
