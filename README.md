@@ -11,7 +11,40 @@ with a limit of 5 free summaries per month per device.
 
 ## Screenshots
 
-> 🚧 Coming soon
+<table>
+  <tr>
+    <td align="center">
+      <img 
+        src="https://github.com/user-attachments/assets/a35515a0-fccf-4694-a3c5-6b0a396c3c26" 
+        width="260"
+        alt="Screenshot_1791869561"
+      />
+    </td>
+    <td align="center">
+      <img 
+        src="https://github.com/user-attachments/assets/054c2bab-6e96-4843-bdc5-96ce33f25a12" 
+        width="260"
+        alt="Screenshot_1791869583"
+      />
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img 
+        src="https://github.com/user-attachments/assets/2bad2b0b-1332-4896-8cf3-db88520b8f56"
+        width="260"
+        alt="Screenshot_1791869571"
+      />
+    </td>
+    <td align="center">
+      <img 
+        src="https://github.com/user-attachments/assets/341656f3-f586-4853-b6f4-f6cd6e230a0a"
+        width="260"
+        alt="Screenshot_1791869588"
+      />
+    </td>
+  </tr>
+</table>
 
 ---
 
@@ -22,7 +55,7 @@ with a limit of 5 free summaries per month per device.
 - 🔖 Bookmark pages for quick access
 - ✨ AI-generated document summaries (5 free per month)
 - 🌙 Dark and light mode
-- 📱 Android and iOS support
+- 📱 Android support
 
 ---
 
@@ -41,7 +74,7 @@ with a limit of 5 free summaries per month per device.
 ---
 
 ## Project Structure
-
+```text
 /
 ├── assets/                  # App icon, splash screen, images
 ├── screens/                 # HomeScreen, ViewerScreen
@@ -55,6 +88,7 @@ with a limit of 5 free summaries per month per device.
 │   └── migrations/          # SQL migrations — summary_credits table
 ├── .env.example             # Required environment variables
 └── app.json                 # Expo configuration
+```
 
 ---
 
@@ -130,7 +164,7 @@ npx expo start
 
 ## Download
 
-> 🚧 Coming soon — Google Play Store
+[Google Play Store](https://play.google.com/store/apps/details?id=com.oscarg.ezpdf&pli=1)
 
 ---
 
